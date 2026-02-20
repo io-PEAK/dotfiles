@@ -5,3 +5,5 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 export JAVA_HOME=$(/usr/libexec/java_home)
 export PATH="$JAVA_HOME/bin:$PATH"
 
+# llvm
+export PATH="/usr/local/opt/llvm/bin:$PATH"

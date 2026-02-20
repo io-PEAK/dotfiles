@@ -39,12 +39,12 @@ preset = 'qwerty'                                     # Keyboard layout preset
 # -------------------------
 [gaps]
 # Inner gaps between windows
-inner.horizontal = 8                                  # Keep horizontal spacing between windows
-inner.vertical = 8                                    # Keep vertical spacing between windows
+inner.horizontal = 3                                  # Keep horizontal spacing between windows
+inner.vertical = 5                                    # Keep vertical spacing between windows
 
 # Outer gaps between windows and screen edges                                     
-outer.left = 8                                        # Space between left screen edge and windows
-outer.right = 8                                       # Space between right screen edge and windows
+outer.left = 0                                        # Space between left screen edge and windows
+outer.right = 0                                       # Space between right screen edge and windows
 outer.top = 0                                         # Space between top screen edge and windows
 outer.bottom = 0                                      # Space between bottom screen edge and windows
 
@@ -178,13 +178,6 @@ run = [
 ]
 
 [[on-window-detected]]
-if.app-id = 'com.apple.Safari'           # Safari browser
-run = [
-    'move-node-to-workspace 2',          # Place on workspace 2
-    'resize smart +100'                  # Maximize / expand window
-]
-
-[[on-window-detected]]
 if.app-id = 'com.bitwarden.desktop'      # Bitwarden app
 run = ['layout floating']                # Always floating
 
@@ -194,7 +187,23 @@ run = ['layout floating']                # Always floating
 
 [[on-window-detected]]
 if.app-id = 'com.mitchellh.ghostty'      # Ghostty terminal
-run = ['move-node-to-workspace 1']       # Open in workspace 1
+run = ['move-node-to-workspace 1',       # Open in workspace 1
+       'layout floating']      
+
+# [[on-window-detected]]
+# if.app-id = 'com.microsoft.VSCode'       # VS Code
+# run = [
+#    'move-node-to-workspace 2',          # Place on workspace 2
+#   'resize smart +100'                  # Maximize / expand window
+# ]
+
+[[on-window-detected]]
+if.app-id = 'com.jetbrains.intellij'     # Intellij Idea
+run = [
+    'move-node-to-workspace 2',          # Place on workspace 2
+    'resize smart +100'                  # Maximize / expand window
+]
+
 
 # -------------------------
 # Workspace to Monitor Assignment

@@ -18,7 +18,7 @@ alias functions='functions | grep "^my" | awk "{print \$1}"'
 # Symlink
 alias lf='ln -sf'
 
-# Git aliases
+############################# Git aliases ###############################
 alias gs='git status'
 alias gss='git submodule status'
 alias gi='git status --ignored'
@@ -64,5 +64,16 @@ alias tgb='tig blame'              # Shows who last modified each line of a file
 alias tgsf='tig show'              # usage: tgsf <commit|hash|-|branch|-|ref|>
 alias tgl='tig --all'
 
+# Create + Push Repo with gh
+gpub() {
+  gh repo create "$1" --public --source=. --remote=origin --push
+}
+
+# Add SSH Remote
+gremote() {
+  git remote add origin git@github.com:io-PEAK/"$1".git
+}
+
+#############################################################################
 
 

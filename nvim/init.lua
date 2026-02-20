@@ -59,10 +59,23 @@ vim.api.nvim_create_autocmd("ColorScheme", {
 })
 
 -- Added for supporessing image-clip notfiication (its a bug of image-clip)
-local orig_notify = vim.notify
-vim.notify = function(msg, level, opts)
-	if msg and msg:lower():find("not an image") then
-		return
-	end
-	return orig_notify(msg, level, opts)
-end
+vim.defer_fn(function()
+  local suppress = function(msg) return msg and msg:lower():find("content is not an image") end
+
+  for _, notify in ipairs({vim.notify, package.loaded["snacks.notifier"] and package.loaded["snacks.notifier"].notify}) do
+    if type(notify) == "function" then
+      local orig = notify
+      local wrapper = function(msg, ...)
+        if suppress(msg) then return end
+        return orig(msg, ...)
+      end
+      if notify == vim.notify then
+        vim.notify = wrapper
+      else
+        package.loaded["snacks.notifier"].notify = wrapper
+      end
+    end
+  end
+end, 1000)
+
+

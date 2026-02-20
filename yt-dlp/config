@@ -1,22 +1,37 @@
-# Always download to this folder
--o ~/Downloads/YouTube/%(title)s.%(ext)s
+# ----------------------------
+# Output Location
+# ----------------------------
 
-# --- Video and audio quality ---
+# Audio location
+-o "[ext=m4a]/Users/peakmac/Music/Downloads/%(title)s.%(ext)s"
+
+# Video location
+-o "/Users/peakmac/Movies/YTDLP/%(title)s.%(ext)s"
+
+# ----------------------------
+# Default video format
+# ----------------------------
 -f "bv*+ba/b"
-
-# Optional: best video + audio quality
--f bestvideo+bestaudio
-
-# Optional: merge video and audio automatically
 --merge-output-format mp4
 
-# --- Subtitles (optional, auto English if available) ---
+# ----------------------------
+# Default audio format
+# ----------------------------
+--audio-format m4a
+--audio-quality 0
+
+# ----------------------------
+# Subtitles
+# ----------------------------
 --write-auto-subs
 --sub-lang en
 --convert-subs srt
 
-# --- Progress and speed settings ---
+# ----------------------------
+# Stability
+# ----------------------------
+--extractor-args "youtube:player_client=android"
 --console-title
 --no-mtime
 --newline
-
+-c
