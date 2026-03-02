@@ -11,6 +11,11 @@ after-login-command = []                        # Commands to execute immediatel
 #    "exec-and-forget borders active_color=0xff7aa2f7 inactive_color=0xff1e1e2e width=4.0 style=round shadow_color=0x80000000 shadow_width=6.0" ]
 
 # -------------------------
+# SketchyBar Integration
+# -------------------------
+exec-on-workspace-change = ['/bin/bash', '-c', 'sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE']
+
+# -------------------------
 # Normalization & Layouts
 # -------------------------
 enable-normalization-flatten-containers = true                           # Flatten nested containers to simplify layout
@@ -191,9 +196,9 @@ run = ['move-node-to-workspace 1',       # Open in workspace 1
        'layout floating']      
 
 # [[on-window-detected]]
-# if.app-id = 'com.microsoft.VSCode'       # VS Code
+# if.app-id = 'com.microsoft.VSCode'      # VS Code
 # run = [
-#    'move-node-to-workspace 2',          # Place on workspace 2
+#    'move-node-to-workspace 2',         # Place on workspace 2
 #   'resize smart +100'                  # Maximize / expand window
 # ]
 
