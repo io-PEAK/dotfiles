@@ -30,18 +30,42 @@
 ### Directory Structure
 ```bash
 dotfiles/
+├── aerospace
 ├── btop
 │   └── themes
 ├── fastfetch
 │   ├── ascii
 │   └── images
+├── fzf
 ├── ghostty
-│   └── shaders
+│   ├── shaders
+│   └── themes
+├── images
+│   └── readme
+├── karabiner
+│   ├── assets
+│   └── automatic_backups
+├── kitty
+│   └── themes
+├── lazygit
+│   └── themes
 ├── nvim
 │   └── lua
+├── scripts
+│   └── brew
+├── spicetify
+│   ├── CustomApps
+│   ├── Extensions
+│   └── Themes
 ├── starship
+├── tig
+│   └── themes
 ├── tmux
-│   └── plugins
+│   ├── plugins
+│   ├── resurrect
+│   ├── scripts
+│   ├── themes
+│   └── tmuxinator
 ├── yt-dlp
 └── zsh
     └── plugins
