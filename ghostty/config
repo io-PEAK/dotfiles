@@ -1,4 +1,4 @@
-# {ghostty +list-themes}
+gg      # {ghostty +list-themes}
 theme = transparent.conf
 
 # Cursor
