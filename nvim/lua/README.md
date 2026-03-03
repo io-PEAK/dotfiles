@@ -6,13 +6,13 @@ This directory contains core Lua configuration files used by Neovim.
 
 ## **File Overview**
 
-> ### `vim-options.lua`
+### 📄 `vim-options.lua`
 
+```bash 
 This file defines base editor behavior, keybindings, and UI tweaks.  
 It is loaded first from `init.lua` and sets foundational defaults before plugins initialize.
-
+```
 ---
-
 ## **Configuration Breakdown**
 
 ### Basic Indentation
