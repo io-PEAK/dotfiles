@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="images/readme/neovim.ico" width="100" /> 
+  <img src="https://github.com/io-PEAK/dotfiles/blob/main/images/readme/neovim.ico" width="110" /> 
 </h1>
 
 <p align="center">
@@ -21,7 +21,7 @@ This directory contains my personal Neovim configuration.
 
 ## **Preview**
 
-<img src="images/nvim-dashboard.png" width="900" />
+<img src="https://github.com/io-PEAK/dotfiles/blob/main/images/nvim-dashboard.png" width="1000" />
 
 ---
 
@@ -112,7 +112,7 @@ Useful commands:
 
 ## **File Overview**
 
-> ### `init.lua`
+### 📄 `init.lua`
 
 Main Neovim bootstrap file.
 
@@ -130,7 +130,7 @@ It acts as the orchestration layer of the entire configuration.
 
 ---
 
-> ### `last_theme.txt`
+### 📄 `last_theme.txt`
 
 Stores the last applied colorscheme.
 
@@ -138,7 +138,7 @@ Used to persist theme state between Neovim sessions.
 
 ---
 
-> ### `lazy-lock.json`
+### 📄 `lazy-lock.json`
 
 Auto-generated lockfile created by `lazy.nvim`.
 
@@ -148,14 +148,14 @@ Auto-generated lockfile created by `lazy.nvim`.
 
 ---
 
-> ### `lua/`
+### 📄 `lua/`
 
 Contains modular Lua configuration files.
 
 For a detailed breakdown:
 
-- [`vim-options.lua`](nvim/lua/README.md) — custom Vim options and keybindings  
-- [`plugins/`](nvim/lua/plugins/README.md) — plugin configurations and lazy-loaded modules  
+- [`vim-options.lua`](https://github.com/io-PEAK/dotfiles/blob/main/nvim/lua/README.md) — custom Vim options and keybindings  
+- [`plugins/`](https://github.com/io-PEAK/dotfiles/blob/main/nvim/lua/plugins/README.md) — plugin configurations and lazy-loaded modules  
 
 
 ---
