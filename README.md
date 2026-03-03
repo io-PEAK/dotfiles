@@ -289,9 +289,9 @@ nvim/
 I am using **LazyVim** as my plugin manager. If you want the same setup as me, I have created README files for key files inside the `nvim/` configuration.  
 Please follow the corresponding README for details on each file:
 
-- [`init.lua`](nvim/init.lua/README.md) — main Neovim entry point  
-- [`vim-options.lua`](nvim/lua/vim-options/README.md) — custom Vim options and keybindings
-- [`plugins/`](nvim/lua/plugins/README.md) — plugin configurations
+- [`init.lua`](https://github.com/io-PEAK/dotfiles/tree/main/nvim) — main Neovim entry point  
+- [`vim-options.lua`](https://github.com/io-PEAK/dotfiles/tree/main/nvim/lua) — custom Vim options and keybindings
+- [`plugins/`](https://github.com/io-PEAK/dotfiles/tree/main/nvim/lua/plugins) — plugin configurations
 
 <img src="images/readme/tmux.svg" width="20" /> **Tmux Setup**
 ---
