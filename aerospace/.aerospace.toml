@@ -183,6 +183,13 @@ run = [
 ]
 
 [[on-window-detected]]
+if.app-id = 'app.zen-browser.zen'          # Zen browser
+run = [
+    'move-node-to-workspace 1',          # Place on workspace 1
+    'resize smart +100'                  # Maximize / expand window
+]
+
+[[on-window-detected]]
 if.app-id = 'com.bitwarden.desktop'      # Bitwarden app
 run = ['layout floating']                # Always floating
 
