@@ -9,19 +9,20 @@
   <img src="https://img.shields.io/github/license/69-PEAK/dotfiles" alt="License" />
 </p>
 
-**Contents**
----
-- [Repo Overview](#repo-overview)
-- [How to Apply My Dotfiles](#how-to-apply-my-dotfiles)
-- [Zsh](#zsh)
-- [Terminal Tools](#terminal-tools)
-- [Ghostty](#ghostty)
-- [Fastfetch](#fastfetch)
-- [Neovim](#neovim)
-- [Tmux](#tmux)
+## Contents
 
-**Repo overview**
+- 📦 [Repo Overview](#repo-overview)
+- 🛠️ [How to Apply My Dotfiles](#how-to-apply-my-dotfiles)
+- <img src="images/readme/zsh.png" width="16" /> [Zsh](#zsh)
+- <img src="images/readme/terminal.png" width="16" /> [Terminal Tools](#terminal-tools)
+- <img src="images/readme/ghostty.png" width="16" /> [Ghostty](#ghostty)
+- <img src="https://avatars.githubusercontent.com/u/136235211?s=48&v=4" width="16" /> [Fastfetch](#fastfetch)
+- <img src="https://github.com/io-PEAK/dotfiles/blob/main/images/readme/neovim.ico" width="16" /> [Neovim](#neovim)
+- <img src="images/readme/tmux.svg" width="16" /> [Tmux](#tmux)
+
+ **Repo Overview**
 ---
+
 - This repo is where I keep the dotfiles I'm currently using.
 - My daily driver OS is macOS and my editor of choice is Neovim.
 - I use Ghostty, Starship, and Tmux to customize my terminal workflow.
@@ -88,7 +89,7 @@ git clone https://github.com/69-PEAK/dotfiles.git ~/69-PEAK/dotfiles
 ```
 To learn more about setting up each tool, check the README in each corresponding section of this repository.
 
-<img src="images/readme/zsh.png" width="20" /> **Zsh Setup**
+**Zsh**
 ---
 ### Install Zsh
 brew install zsh
@@ -139,7 +140,7 @@ git clone https://github.com/zsh-users/zsh-syntax-highlighting.git plugins/zsh-s
 
 - For Terminal tools like fzf follow next section.
 
-<img src="images/readme/terminal.png" width="20" /> **Terminal Tools**
+**Terminal Tools**
 ---
 ### 1. fzf 
 
@@ -205,7 +206,7 @@ Even though I primarily use `eza`, I keep `LS_COLORS` defined as a fallback for:
 >
 > You do not need vivid if you primarily use eza, since eza can handle its own coloring.
 
-<img src="images/readme/ghostty.png" width="20" /> **Ghostty Setup**
+**Ghostty**
 ---
 ### Preview :
 
@@ -246,7 +247,7 @@ eval "$(starship init zsh)"
 >
 > Starship expects its configuration file at `~/.config/starship.toml`
 
-**Fastfetch Setup**
+**Fastfetch**
 ---
 ### Preview :
 
@@ -265,7 +266,7 @@ My fastfetch config is stored in `~/.config/fastfetch/conf.jsonc` which contains
 >   - I used `"type": "kitty-direct"` for images, this **does not work for ASCII art**.
 >   - If you want ASCII art instead, comment out all `type` entries in the config.
 
-<img src="images/readme/neovim.ico" width="20" /> **Neovim Setup**
+**Neovim**
 ---
 ### Preview :
 
@@ -293,7 +294,7 @@ Please follow the corresponding README for details on each file:
 - [`vim-options.lua`](https://github.com/io-PEAK/dotfiles/tree/main/nvim/lua) — custom Vim options and keybindings
 - [`plugins/`](https://github.com/io-PEAK/dotfiles/tree/main/nvim/lua/plugins) — plugin configurations
 
-<img src="images/readme/tmux.svg" width="20" /> **Tmux Setup**
+**Tmux**
 ---
 ### Preview :
 
