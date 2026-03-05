@@ -1,4 +1,5 @@
 ########################### COLOR SCRIPT #########################################
+
 color() {                          # Define a function named "color"
     if [[ $# -eq 0 ]]; then       # If NO arguments passed (you just type "color")
         echo "📦 Available colorscript patterns:\n"
@@ -19,6 +20,7 @@ color() {                          # Define a function named "color"
 
 ########################### BATTERY INFORMATION ################################
 mybatinfo() {
+
     ioreg -rn AppleSmartBattery | awk -F'= ' '
     /"CurrentCapacity"/ {curcap=$2}
     /"MaxCapacity"/ {maxcap=$2}
@@ -91,7 +93,8 @@ clean_branch() {
   echo "Done! Branch '$branch' is a clean slate and now tracks origin/$branch."
 }
 
-###################################### Spicetify Quick Apply ######################################
+#################################### Spicetify Quick Apply ####################################
+
 spice() {
     local theme_name="$1"
     local color_scheme="$2"
@@ -130,6 +133,7 @@ spice() {
 }
 
 ############################### Tig theme switcher######################################################
+
 tig-theme() {
   local theme="$1"
   local base="$HOME/.config/tig"
@@ -150,7 +154,8 @@ tig-theme() {
   ln -sf "$themes/$theme" "$base/theme.tig"
   echo "Theme '$theme' applied! Restart tig to see changes."
 }
-################################### Lazygit theme switcher using yq ##################################
+################################### Lazygit theme switcher using yq #####################################
+
 lazy-theme() {
   local theme="$1"
   local base="$HOME/github/dotfiles/lazygit"
@@ -177,4 +182,3 @@ lazy-theme() {
 
   echo "Theme '$theme' applied! Restart lazygit to see changes."
 }
-###############################################################################3##########
