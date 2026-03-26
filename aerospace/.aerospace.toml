@@ -185,10 +185,10 @@ run = ['layout floating']                # Always floating
 if.app-id = 'com.apple.finder'           # Finder
 run = ['layout floating']                # Always floating
 
-[[on-window-detected]]
-if.app-id = 'com.mitchellh.ghostty'      # Ghostty terminal
-run = ['move-node-to-workspace 1',       # Open in workspace 1
-       'layout floating']      
+# [[on-window-detected]]
+# if.app-id = 'com.mitchellh.ghostty'      # Ghostty terminal
+# run = ['move-node-to-workspace 1',       # Open in workspace 1
+#       'layout floating']      
 
 # [[on-window-detected]]
 # if.app-id = 'com.microsoft.VSCode'      # VS Code

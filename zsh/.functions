@@ -182,3 +182,18 @@ lazy-theme() {
 
   echo "Theme '$theme' applied! Restart lazygit to see changes."
 }
+######################################## yt-dlp ##########################################################
+ytlist() {
+  yt-dlp --extractor-args "youtube:po_token=web.gvs+auto" -F "$1"
+}
+
+ytd() {
+  yt-dlp \
+    --extractor-args "youtube:po_token=web.gvs+auto" \
+    -f "bv*+ba/b" \
+    --write-subs \
+    --write-auto-subs \
+    --sub-langs "en.*" \
+    --embed-subs \
+    "$1"
+}
