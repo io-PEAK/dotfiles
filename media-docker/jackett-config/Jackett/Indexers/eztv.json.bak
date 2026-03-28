@@ -1,0 +1,26 @@
+[
+  {
+    "id": "sitelink",
+    "type": "inputstring",
+    "name": "Site Link",
+    "value": "https://eztvx.to/"
+  },
+  {
+    "id": "cookieheader",
+    "type": "hiddendata",
+    "name": "CookieHeader",
+    "value": "PHPSESSID=l01qsrconeabevv420hfuqmg0j; cf_clearance=qBPNLqxusN.dR6GNPlpTJ1Zpu7ZtcLxoeygU4VxW5wU-1774599249-1.2.1.1-CPpqZWQ_I64mTpzgrPo.yKqxZcQcg.GcqE67N98hFO6R54C9JrkwdNJB47.GANwPbLWlsmbPEhzk37Z7zNRTkpkNRUTPUP711DDTy9zUKMIXXdQA1JDp_X1IMyN3pQ_rwxJBx7abhEtEl89O_CGjRX3Zb8nSn.Iq78pDeeV9R_GR_PSH4ufST5ZQw9ZuVIPRW6LTFtKOAHVa_HC2rVKthSOw65Q_igPYZJGAJWcMGbd6wJ79BcJlMYshkgGy7yg_"
+  },
+  {
+    "id": "lasterror",
+    "type": "hiddendata",
+    "name": "LastError",
+    "value": null
+  },
+  {
+    "id": "tags",
+    "type": "inputtags",
+    "name": "Tags",
+    "value": ""
+  }
+]

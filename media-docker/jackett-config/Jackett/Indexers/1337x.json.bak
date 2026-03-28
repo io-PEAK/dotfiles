@@ -1,0 +1,79 @@
+[
+  {
+    "id": "sitelink",
+    "type": "inputstring",
+    "name": "Site Link",
+    "value": "https://1337x.to/"
+  },
+  {
+    "id": "cookieheader",
+    "type": "hiddendata",
+    "name": "CookieHeader",
+    "value": "cf_clearance=z6x_gcMcAhcHuZZ0uySKOgraW3lpFEtTHb4wxKywH8Q-1774599267-1.2.1.1-QvUKf06AumrEhk6VxETh61.qELkwTuFC_aMU6H6UOw_qHSb3FTnavuMAPQLOpKRQffI6zKe8WfXpMSVpn9MDUXAKI3b_QIYNk.XSTe_pF1qS2bcjTm6jHdM9QdiD6MbG4xyM2F1M0ZQbpVqzmyDzRZ.BUlgstuZSS2nTiioasQTLh36CjRAeqgcyFihT.cSvgpMTkYRcNDilf84L6Ws_nFFwM8fOlnTmcoTnG8jvuNT_eRq9p30dFqWdGbGaj9Dv"
+  },
+  {
+    "id": "lasterror",
+    "type": "hiddendata",
+    "name": "LastError",
+    "value": null
+  },
+  {
+    "id": "filterbyuploader",
+    "type": "inputstring",
+    "name": "Filter by Uploader",
+    "value": null
+  },
+  {
+    "id": "downloadlink",
+    "type": "inputselect",
+    "name": "Download link",
+    "value": "http://itorrents.org/",
+    "options": {
+      "http://itorrents.org/": "iTorrents.org",
+      "magnet:": "magnet"
+    }
+  },
+  {
+    "id": "downloadlink(fallback)",
+    "type": "inputselect",
+    "name": "Download link (fallback)",
+    "value": "magnet:",
+    "options": {
+      "http://itorrents.org/": "iTorrents.org",
+      "magnet:": "magnet"
+    }
+  },
+  {
+    "id": "disablesorting-1337xpreventssortingsearchesduringhighserverload,whichbreakstheindexerwhenperformingakeywordsearch-disableifyougetzeroresults",
+    "type": "inputbool",
+    "name": "Disable sorting - 1337x prevents sorting searches during high server load, which breaks the indexer when performing a keyword search - disable if you get zero results",
+    "value": false
+  },
+  {
+    "id": "sortrequestedfromsite",
+    "type": "inputselect",
+    "name": "Sort requested from site",
+    "value": "time",
+    "options": {
+      "time": "created",
+      "seeders": "seeders",
+      "size": "size"
+    }
+  },
+  {
+    "id": "orderrequestedfromsite",
+    "type": "inputselect",
+    "name": "Order requested from site",
+    "value": "desc",
+    "options": {
+      "desc": "desc",
+      "asc": "asc"
+    }
+  },
+  {
+    "id": "tags",
+    "type": "inputtags",
+    "name": "Tags",
+    "value": ""
+  }
+]

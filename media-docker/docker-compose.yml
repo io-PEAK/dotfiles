@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  jackett:
+    image: linuxserver/jackett
+    container_name: jackett
+    ports:
+      - "9117:9117"
+    environment:
+      - TZ=Asia/Kolkata
+    volumes:
+      - ./jackett-config:/config
+    restart: unless-stopped
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    ports:
+      - "8191:8191"
+    restart: unless-stopped
+
+  qbittorrent:
+    image: linuxserver/qbittorrent
+    container_name: qbittorrent
+    ports:
+      - "8080:8080"
+      - "6881:6881"
+      - "6881:6881/udp"
+    environment:
+      - TZ=Asia/Kolkata
+      - WEBUI_PORT=8080
+    volumes:
+      - ./qb-config:/config
+      - ./downloads:/downloads
+    restart: unless-stopped

@@ -1,0 +1,6 @@
+{
+    "api_key": "JACKETT_API_KEY",
+    "thread_count": 20,
+    "tracker_first": false,
+    "url": "http://jackett:9117"
+}
