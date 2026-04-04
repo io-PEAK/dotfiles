@@ -61,7 +61,7 @@ return {
 				["bg"] = { "bg", "Normal" }, -- background
 				["hl"] = { "fg", "Comment" }, -- highlighted match text
 				["fg+"] = { "fg", "Normal" }, -- selected line foreground
-				["bg+"] = { "bg", "CursorLine" }, -- selected line background
+				["bg+"] = { "bg", "Normal" }, -- selected line background
 				["hl+"] = { "fg", "Statement" }, -- highlighted match in selected line
 				["info"] = { "fg", "PreProc" }, -- info line (count)
 				["prompt"] = { "fg", "Conditional" }, -- prompt character

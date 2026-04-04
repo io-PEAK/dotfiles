@@ -211,6 +211,9 @@ format = '[ $symbol ($version) ]($style)'
 symbol = ""
 style = "bg:bg3 fg:text"
 format = '[ $symbol ($version) ]($style)'
+detect_files = ["package.json"]
+detect_extensions = ["js", "ts"]
+detect_folders = ["node_modules"]
 
 [nim]
 symbol = "󰆥"
@@ -284,3 +287,4 @@ green = '77'
 white = '231'
 gray = '242'
 black = '16'
+
