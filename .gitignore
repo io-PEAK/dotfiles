@@ -15,4 +15,7 @@ lazygit/config.yml
 # Tig
 tig/theme.tig
 
+# Karabiner
+karabiner/automatic_backups
+
 
