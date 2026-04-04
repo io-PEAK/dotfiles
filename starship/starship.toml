@@ -228,7 +228,7 @@ format = '[ $symbol ($version) ]($style)'
 [python]
 symbol = ""
 style = "bg:bg3 fg:text"
-format = '[ $symbol ($version) ]($style)'
+format = '[ $symbol ($virtualenv) ]($style)'
 
 [rust]
 symbol = ""
