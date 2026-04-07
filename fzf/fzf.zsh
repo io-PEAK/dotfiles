@@ -90,7 +90,7 @@ _FZF_BASE_OPTS="
   --pointer='❯'
   --marker='◆'
 
-  --header='  ↵ open   ALT-I images   ALT-M videos   ALT-A all   CTRL-/ preview   SPC select   ESC quit  '
+  --header='  ↵ open   ALT-I images   ALT-M videos   ALT-A all   CTRL-/ preview   CTRL-Y copy path   SPC select   ESC quit  '
   --header-first
 
   --bind='enter:execute(~/.config/fzf/open_file.sh {+})'
@@ -114,6 +114,9 @@ _FZF_BASE_OPTS="
   --bind='esc:abort'
 "
 
+# ── Copy path bind (separate to avoid \n quoting issues in double-quoted string) ──
+_FZF_COPY_BIND=$'--bind=\'ctrl-y:execute-silent(\n  printf "%s\\n" {+} | pbcopy\n  count=$(printf "%s\\n" {+} | wc -l | tr -d " ")\n  msg="  ✔  ${count} path(s) copied  "\n  { printf "\\033[s\\033[999;1H\\033[K\\033[1;38;2;0;255;179m${msg}\\033[0m" >/dev/tty\n    sleep 0.5\n    printf "\\033[999;1H\\033[K\\033[u" >/dev/tty\n  } &\n)+bell\''
+
 # ── Apply Theme ─────────────────────────────
 
 _fzf_apply_theme() {
@@ -131,7 +134,7 @@ _fzf_apply_theme() {
     *)          colors=$(_fzf_theme_ember)      ;;
   esac
 
-  export FZF_DEFAULT_OPTS="$_FZF_BASE_OPTS $colors"
+  export FZF_DEFAULT_OPTS="$_FZF_BASE_OPTS $_FZF_COPY_BIND $colors"
   export FZF_CURRENT_THEME="$theme"
 }
 

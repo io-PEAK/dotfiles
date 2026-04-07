@@ -12,7 +12,7 @@ pick_one() {
   local label="$1"; shift
   local out key raw clean
 
-  out="$(printf '%s\n' "$@" | fzf \
+  out="$(FZF_DEFAULT_OPTS="" printf '%s\n' "$@" | fzf \
     --ansi \
     --no-multi \
     --marker='' \
@@ -25,6 +25,8 @@ pick_one() {
     --prompt='   ' \
     --info=right \
     --color='fg:#cdd6f4,fg+:#ffffff,hl:#89b4fa,hl+:#b4befe,pointer:#f38ba8' \
+    --header='  ↵ open   ESC cancel  ' \
+    --header-first \
     --expect=enter,esc)"
 
   key="$(printf '%s\n' "$out" | sed -n '1p')"
@@ -69,6 +71,7 @@ choices=()
 command -v nvim >/dev/null 2>&1 && choices+=("nvim")
 command -v code >/dev/null 2>&1 && choices+=("vscode")
 command -v nano >/dev/null 2>&1 && choices+=("nano")
+[[ -d "/System/Library/CoreServices/Finder.app" ]] && choices+=("finder")
 [[ ${#choices[@]} -eq 0 ]] && exit 0
 
 choice="$(pick_one $' \033[1;38;5;111m✦\033[0m  \033[1;38;5;189mOPEN WITH\033[0m  \033[1;38;5;111m✦\033[0m ' "${choices[@]}")" || exit 0
@@ -77,4 +80,5 @@ case "$choice" in
   nvim) exec nvim "$file" ;;
   vscode) code -g "$file" >/dev/null 2>&1 & disown ;;
   nano) exec nano "$file" ;;
+  finder) open -R "$file" >/dev/null 2>&1 & disown ;;
 esac
