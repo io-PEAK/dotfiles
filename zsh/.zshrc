@@ -130,4 +130,3 @@ else
   compdef _opencode_yargs_completions opencode
 fi
 ###-end-opencode-completions-###
-
