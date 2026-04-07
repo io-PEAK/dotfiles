@@ -18,4 +18,5 @@ tig/theme.tig
 # Karabiner
 karabiner/automatic_backups
 
-
+# fzf
+fzf/theme
