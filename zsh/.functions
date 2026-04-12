@@ -1,62 +1,94 @@
 ########################### COLOR SCRIPT #########################################
 
-color() {                          # Define a function named "color"
-    if [[ $# -eq 0 ]]; then       # If NO arguments passed (you just type "color")
-        echo "📦 Available colorscript patterns:\n"
-        colorscript -l             # Show list of all patterns
-        echo "\n💡 Usage:"         # Print helpful usage instructions
-        echo "  color <pattern>..."
+color() {                          
+    if [[ $# -eq 0 ]]; then
+    echo       
+     gum style --bold "📦 Available colorscript patterns:"
+    echo
+        colorscript -l
+        echo
+        gum style "💡 Usage: color <pattern> | color random | color list"
         
-    elif [[ "$1" == "list" ]]; then   # If you type "color list"
-        colorscript -l                 # Just show the list
+    elif [[ "$1" == "list" ]]; then   
+        colorscript -l                
         
-    elif [[ "$1" == "random" ]]; then # If you type "color random"
-        colorscript -r                 # Show a random pattern
+    elif [[ "$1" == "random" ]]; then 
+        colorscript -r                
         
-    else                               # Otherwise (you typed "color square")
-        colorscript -e "$1"            # Run colorscript with your pattern name
+    else                              
+        colorscript -e "$1"            
     fi
 }
 
 ########################### BATTERY INFORMATION ################################
-mybatinfo() {
+batinfo() {
 
+  while true; do
+    clear
+
+    data=$(gum spin --spinner dot --title "Fetching battery data..." -- \
+    sleep 0.4
     ioreg -rn AppleSmartBattery | awk -F'= ' '
-    /"CurrentCapacity"/ {curcap=$2}
-    /"MaxCapacity"/ {maxcap=$2}
-    /"AppleRawMaxCapacity"/ {rawmax=$2}
-    /"DesignCapacity"/ {designcap=$2}
-    /"CycleCount"/ {cycle=$2}
-    /"Voltage"/ {volt=sprintf("%.2f", $2/1000)}
-    /"ExternalConnected"/ {plug=$2}
-    /"IsCharging"/ {charging=$2}
-    /"FullyCharged"/ {full=$2}
-    END {
-        true_charge = (maxcap > 0) ? (curcap / maxcap) * 100 : 0
-        health = (designcap > 0) ? (rawmax / designcap) * 100 : 0
-        current_design_mah = (designcap > 0 && maxcap > 0) ? sprintf("%.0f", curcap * (designcap / maxcap)) : curcap
+        /"CurrentCapacity"/ {curcap=$2}
+        /"MaxCapacity"/ {maxcap=$2}
+        /"AppleRawMaxCapacity"/ {rawmax=$2}
+        /"DesignCapacity"/ {designcap=$2}
+        /"CycleCount"/ {cycle=$2}
+        /"Voltage"/ {volt=sprintf("%.2f", $2/1000)}
+        /"ExternalConnected"/ {plug=$2}
+        /"IsCharging"/ {charging=$2}
+        /"FullyCharged"/ {full=$2}
+        END {
+            true_charge = (maxcap > 0) ? (curcap / maxcap) * 100 : 0
+            health = (designcap > 0) ? (rawmax / designcap) * 100 : 0
+            current_design_mah = (designcap > 0 && maxcap > 0) ? sprintf("%.0f", curcap * (designcap / maxcap)) : curcap
 
-        print "🔋 Battery Report"
-        print "------------------------------"
-        printf "True Charge       : %.1f%% (raw)\n", true_charge
-        printf "macOS Display %%   : %.1f%%\n", true_charge
-        printf "Health (Max Cap)  : %.1f%%\n", health
-        printf "Current Capacity  : %d mAh (of %d mAh, %.1f%%)\n", current_design_mah, designcap, true_charge
-        printf "Full Capacity     : %d mAh\n", rawmax
-        printf "Design (Native)   : %d mAh\n", designcap
-        printf "Cycle Count       : %s\n", cycle
-        printf "Voltage           : %s V\n", volt
-        power = (plug == "Yes") ? "AC" : "Battery"
-        printf "Power Source      : %s\n", power
-        if (charging == "Yes") {
-            charge_status = "Charging"
-        } else if (plug == "Yes" && full == "Yes") {
-            charge_status = "Bypass (100%)"
-        } else {
-            charge_status = "Not Charging"
-        }
-        printf "Charging          : %s\n", charge_status
-    }'
+            printf "True Charge       : %.1f%% (raw)\n", true_charge
+            printf "macOS Display %%   : %.1f%%\n", true_charge
+            printf "Health (Max Cap)  : %.1f%%\n", health
+            printf "Current Capacity  : %d mAh (of %d mAh)\n", current_design_mah, designcap
+            printf "Full Capacity     : %d mAh\n", rawmax
+            printf "Design (Native)   : %d mAh\n", designcap
+            printf "Cycle Count       : %s\n", cycle
+            printf "Voltage           : %s V\n", volt
+
+            power = (plug == "Yes") ? "AC" : "Battery"
+            printf "Power Source      : %s\n", power
+
+            if (charging == "Yes") {
+                charge_status = "Charging"
+            } else if (plug == "Yes" && full == "Yes") {
+                charge_status = "Bypass (100%)"
+            } else {
+                charge_status = "Not Charging"
+            }
+            printf "Charging          : %s\n", charge_status
+
+            # print raw health separately for shell parsing
+            printf "\n__HEALTH__=%.1f\n", health
+        }')
+
+    # extract health
+    health=$(echo "$data" | grep "__HEALTH__" | cut -d= -f2)
+    data=$(echo "$data" | grep -v "__HEALTH__")
+
+    # show warning if needed
+    if (( $(echo "$health < 80" | bc -l) )); then
+      gum style --foreground 196 --bold "⚠️  Battery health is low ($health%)"
+    fi
+
+    # main UI block
+    gum style \
+  --border rounded \
+  --padding "1 2" \
+  --margin "1 0" \
+  --border-foreground 212 \
+  "$(printf "🔋 Battery Report\n\n%s" "$data")"
+
+    # refresh loop
+    gum confirm "Refresh battery info?" || break
+
+  done
 }
  
 ############################### Clean Branch history #######################################
@@ -64,136 +96,571 @@ clean_branch() {
   local branch="${1:-main}"
   local orphan_branch="clean-$branch"
 
-  # Ensure everything is committed.
-  git status
-  echo "Check: Ensure all work committed and remote is up to date."
+  gum confirm "⚠️ This will DELETE history of '$branch'. Continue?" || return
 
-  # Create orphan branch with *no* history
-  git checkout --orphan "$orphan_branch"
-  
-  # Remove all tracked files from index
-  git rm -rf .            # removes from git index, not disk
+  command git status
+  echo "Ensure all work is committed and pushed."
 
-  # Add and commit up-to-date files
-  git add .
-  git commit -m "chore: fresh start with up-to-date files"
+  gum confirm "Proceed with cleaning branch '$branch'?" || return
 
-  # Delete old branch
-  git branch -D "$branch"
-  
-  # Rename orphan branch to original name
-  git branch -m "$branch"
-  
-  # Force-push to remote (overwrites history!)
-  git push --force origin "$branch"
+  command git checkout --orphan "$orphan_branch"
+  command git rm -rf .
 
-  # Link local branch to remote (upstream)
-  git branch --set-upstream-to="origin/$branch" "$branch"
+  command git add .
+  command git commit -m "chore: fresh start with up-to-date files"
 
-  echo "Done! Branch '$branch' is a clean slate and now tracks origin/$branch."
+  command git branch -D "$branch"
+  command git branch -m "$branch"
+
+  command git push --force origin "$branch"
+  command git branch --set-upstream-to="origin/$branch" "$branch"
+
+  gum style --foreground 42 "✅ Branch '$branch' reset successfully."
 }
 
-#################################### Spicetify Quick Apply ####################################
+git() {
+  emulate -L zsh
+  setopt localoptions no_aliases
+
+  if [[ $# -gt 0 ]]; then
+    command git "$@"
+    return
+  fi
+
+  if ! command -v gum >/dev/null 2>&1; then
+    echo "gum not found. Running git help."
+    command git --help
+    return
+  fi
+
+  local action branch msg file_choice repo_name remote_name
+
+  action=$(printf "%s\n" \
+    "status" \
+    "status --ignored" \
+    "submodule status" \
+    "add" \
+    "commit" \
+    "push" \
+    "pull" \
+    "pull --rebase" \
+    "log" \
+    "branch" \
+    "switch branch" \
+    "create branch" \
+    "diff" \
+    "diff --staged" \
+    "restore" \
+    "restore --staged" \
+    "reset" \
+    "stash" \
+    "stash pop" \
+    "undo last commit" \
+    "create public repo" \
+    "add ssh remote" \
+    "Cancel" | gum choose --header $'Git Menu:\n' --show-help=false --padding "1 1") || return
+
+  [[ "$action" == "Cancel" ]] && return
+
+  case "$action" in
+    "status")
+      command git status
+      ;;
+    "status --ignored")
+      command git status --ignored
+      ;;
+    "submodule status")
+      command git submodule status
+      ;;
+    "add")
+      echo
+      file_choice=$(gum input --placeholder "File, folder, or . for all") || return
+      [[ -z "$file_choice" ]] && return
+      command git add "$file_choice"
+      ;;
+    "commit")
+      echo
+      msg=$(gum input --placeholder "Commit message") || return
+      [[ -z "$msg" ]] && return
+      command git commit -m "$msg"
+      ;;
+    "push")
+      command git push
+      ;;
+    "pull")
+      command git pull
+      ;;
+    "pull --rebase")
+      command git pull --rebase
+      ;;
+    "log")
+      command git log --oneline --graph --decorate
+      ;;
+    "branch")
+      command git branch
+      ;;
+    "switch branch")
+      branch=$(command git branch --format='%(refname:short)' | gum choose --header $'Switch to branch\n' --show-help=false --padding "1 1") || return
+      [[ -z "$branch" ]] && return
+      gum confirm "Switch to $branch?" && command git switch "$branch"
+      ;;
+    "create branch")
+      echo
+      branch=$(gum input --placeholder "New branch name") || return
+      [[ -z "$branch" ]] && return
+      command git switch -c "$branch"
+      ;;
+    "diff")
+      command git diff
+      ;;
+    "diff --staged")
+      command git diff --staged
+      ;;
+    "restore")
+      echo
+      file_choice=$(gum input --placeholder "File or folder to restore") || return
+      [[ -z "$file_choice" ]] && return
+      command git restore "$file_choice"
+      ;;
+    "restore --staged")
+      echo
+      file_choice=$(gum input --placeholder "File or folder to unstage") || return
+      [[ -z "$file_choice" ]] && return
+      command git restore --staged "$file_choice"
+      ;;
+    "reset")
+      command git reset
+      ;;
+    "stash")
+      command git stash
+      ;;
+    "stash pop")
+      command git stash pop
+      ;;
+    "undo last commit")
+      gum confirm "Undo last commit and keep changes?" && command git reset --soft HEAD~1
+      ;;
+    "create public repo")
+      echo
+      repo_name=$(gum input --placeholder "Repo name") || return
+      [[ -z "$repo_name" ]] && return
+      gum confirm "Create public repo '$repo_name'?" && \
+        command gh repo create "$repo_name" --public --source=. --remote=origin --push
+      ;;
+    "add ssh remote")
+      echo
+      remote_name=$(gum input --placeholder "Repo name") || return
+      [[ -z "$remote_name" ]] && return
+      gum confirm "Add remote '$remote_name'?" && \
+        command git remote add origin git@github.com:io-PEAK/"$remote_name".git
+      ;;
+  esac
+}
+
+#################################### Spicetify Menu ####################################
 
 spice() {
+  emulate -L zsh
+  setopt localoptions no_xtrace
+  unsetopt xtrace
+  set +x
+
     local theme_name="$1"
     local color_scheme="$2"
 
     if [ -z "$theme_name" ]; then
-        echo "Usage: spice <theme_name> [color_scheme]"
-        return 1
+        printf '\n'
+        while true; do
+        case "$(printf "%s\n" "Choose Theme" "Update Spicetify" "Backup Apply" | gum choose --show-help=false --padding "1 1" --header "Choose action (Esc to quit)")" in
+                "Choose Theme")
+          # Esc in this chooser returns to the previous menu.
+            theme_name=$(ls "$HOME/.config/spicetify/Themes" | gum choose --show-help=false --padding "1 1" --header "Choose theme (Esc to go back)") || {
+              printf '\033[1A\033[2K\r'
+              continue
+            }
+                    break
+                    ;;
+                "Update Spicetify")
+                    theme_name="update"
+                    break
+                    ;;
+                "Backup Apply")
+                    theme_name="backup-apply"
+                    break
+                    ;;
+          "")
+            printf '\033[1A\033[2K\r'
+            return
+            ;;
+            esac
+        done
     fi
+
+  case "$theme_name" in
+    update)
+      gum confirm "Run 'spicetify update'?" || return
+      gum spin --title "Updating Spicetify..." -- spicetify update >/dev/null 2>&1
+      gum style --foreground 42 "🎵 Spicetify updated."
+      return
+      ;;
+    backup-apply|backup_apply|backupapply)
+      gum confirm "Run 'spicetify backup apply'?" || return
+      gum spin --title "Running backup apply..." -- spicetify backup apply >/dev/null 2>&1
+      gum style --foreground 42 "🎵 Spicetify backup apply completed."
+      return
+      ;;
+  esac
 
     local theme_dir="$HOME/.config/spicetify/Themes/$theme_name"
 
-    # Check if theme exists
     if [ ! -d "$theme_dir" ]; then
-        echo "Theme '$theme_name' not found. Available themes:"
-        ls "$HOME/.config/spicetify/Themes"
+        gum style --foreground 196 "Theme '$theme_name' not found."
         return 1
     fi
 
-    # Set theme
     spicetify config current_theme "$theme_name"
 
-    # Handle color scheme
     if [ -n "$color_scheme" ]; then
         if ! grep -q "\[$color_scheme\]" "$theme_dir/color.ini"; then
-            echo "Color scheme '$color_scheme' not found. Available schemes:"
-            grep "^\[" "$theme_dir/color.ini" | tr -d "[]"
-            return 1   # prevent apply if invalid
+            gum style --foreground 196 "Invalid color scheme."
+            return 1
         fi
         spicetify config color_scheme "$color_scheme"
     fi
 
-    # Apply theme 
-    spicetify apply >/dev/null 2>&1
+    gum spin --title "Applying theme..." -- spicetify apply >/dev/null 2>&1
 
-    echo "Theme '$theme_name' applied${color_scheme:+ with color scheme '$color_scheme'}."
+    gum style --foreground 42 "🎵 Theme '$theme_name' applied."
 }
 
-############################### Tig theme switcher######################################################
+############################### Tig Menu ######################################################
 
-tig-theme() {
-  local theme="$1"
-  local base="$HOME/.config/tig"
-  local themes="$base/themes"
+tig() {
+  emulate -L zsh
+  setopt localoptions no_aliases
 
-  if [[ -z "$theme" ]]; then
-    echo "Usage: tig-theme <theme>"
-    echo "Available themes:"
-    ls "$themes"
-    return 1
+  if [[ $# -gt 0 ]]; then
+    command tig "$@"
+    return
   fi
 
-  if [[ ! -f "$themes/$theme" ]]; then
-    echo "tig-theme: theme '$theme' not found"
-    return 1
+  if ! command -v gum >/dev/null 2>&1; then
+    command tig
+    return
   fi
 
-  ln -sf "$themes/$theme" "$base/theme.tig"
-  echo "Theme '$theme' applied! Restart tig to see changes."
+  local action theme base themes
+  base="$HOME/.config/tig"
+  themes="$base/themes"
+
+  action=$(printf "%s\n" \
+    "open tig" \
+    "status" \
+    "blame" \
+    "show" \
+    "all" \
+    "theme" \
+    "Cancel" | gum choose --header $'Tig Menu:\n' --show-help=false --padding "1 1") || return
+
+  [[ "$action" == "Cancel" ]] && return
+
+  case "$action" in
+    "open tig")
+      command tig
+      ;;
+    "status")
+      command tig status
+      ;;
+    "blame")
+      command tig blame
+      ;;
+    "show")
+      command tig show
+      ;;
+    "all")
+      command tig --all
+      ;;
+    "theme")
+      theme=$(command ls "$themes" | gum choose --header $'Choose tig theme:\n' --show-help=false --padding "1 1") || return
+      [[ -z "$theme" ]] && return
+      if [[ ! -f "$themes/$theme" ]]; then
+        gum style --foreground 196 "Theme not found"
+        return 1
+      fi
+
+      ln -sf "$themes/$theme" "$base/theme.tig"
+      command tig
+      ;;
+  esac
 }
-################################### Lazygit theme switcher using yq #####################################
 
-lazy-theme() {
-  local theme="$1"
-  local base="$HOME/github/dotfiles/lazygit"
-  local themes="$base/themes"
-  local base_config="$base/config.base.yml"
-  local config="$base/config.yml"
+################################### Lazygit Menu #####################################
 
-  if [[ -z "$theme" ]]; then
-    echo "Usage: lazygit-theme <theme>"
-    echo "Available themes:"
-    ls "$themes"
-    return 1
+lazygit() {
+  emulate -L zsh
+  setopt localoptions no_aliases
+
+  if [[ $# -gt 0 ]]; then
+    command lazygit "$@"
+    return
   fi
 
-  local theme_file="$themes/$theme"
-  if [[ ! -f "$theme_file" ]]; then
-    echo "lazygit-theme: theme '$theme' not found at $theme_file"
-    ls "$themes"
-    return 1
+  if ! command -v gum >/dev/null 2>&1; then
+    command lazygit
+    return
   fi
 
-  # Merge base config with theme! Write result to config.yml
-  yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' "$base_config" "$theme_file" > "$config"
+  local action theme base themes base_config config theme_file repo_path config_file
+  base="$HOME/github/dotfiles/lazygit"
+  themes="$base/themes"
+  base_config="$base/config.base.yml"
+  config="$base/config.yml"
 
-  echo "Theme '$theme' applied! Restart lazygit to see changes."
-}
-######################################## yt-dlp ##########################################################
-ytlist() {
-  yt-dlp --extractor-args "youtube:po_token=web.gvs+auto" -F "$1"
-}
+  action=$(printf "%s\n" \
+    "open lazygit" \
+    "open in repo path" \
+    "open with config file" \
+    "theme" \
+    "Cancel" | gum choose --header $'Lazygit Menu:\n' --show-help=false --padding "1 1") || return
 
-ytd() {
-  yt-dlp \
-    --extractor-args "youtube:po_token=web.gvs+auto" \
-    -f "bv*+ba/b" \
-    --write-subs \
-    --write-auto-subs \
-    --sub-langs "en.*" \
-    --embed-subs \
-    "$1"
+  [[ "$action" == "Cancel" ]] && return
+
+  case "$action" in
+    "open lazygit")
+      command lazygit
+      ;;
+    "open in repo path")
+      echo
+      repo_path=$(gum input --placeholder "Repo path (example: ~/github/dotfiles)") || return
+      [[ -z "$repo_path" ]] && return
+      command lazygit -p "$repo_path"
+      ;;
+    "open with config file")
+      echo
+      config_file=$(gum input --placeholder "Config file path (example: ~/.config/lazygit/config.yml)") || return
+      [[ -z "$config_file" ]] && return
+      command lazygit -ucf "$config_file"
+      ;;
+    "theme")
+      theme=$(command ls "$themes" | gum choose --header $'Choose lazygit theme:\n' --show-help=false --padding "1 1") || return
+      [[ -z "$theme" ]] && return
+
+      theme_file="$themes/$theme"
+      if [[ ! -f "$theme_file" ]]; then
+        gum style --foreground 196 "Theme not found"
+        return 1
+      fi
+
+      gum spin --title "Applying lazygit theme..." -- \
+        yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' \
+        "$base_config" "$theme_file" > "$config"
+
+      command lazygit
+      ;;
+  esac
+}
+######################################## yt-dlp Menu ##########################################################
+
+yt-dlp() {
+  emulate -L zsh
+  setopt localoptions no_aliases
+
+  if [[ $# -gt 0 ]]; then
+    command yt-dlp "$@"
+    return
+  fi
+
+  if ! command -v gum >/dev/null 2>&1; then
+    echo "gum not found. Running plain yt-dlp help."
+    command yt-dlp --help
+    return
+  fi
+
+  local action url quality format_selector sub_lang
+  local start_ts end_ts section_expr format_id pstart pend
+
+  action=$(printf "%s\n" \
+    "Best video + audio" \
+    "Download section (video)" \
+    "Download section (audio m4a)" \
+    "Audio only (m4a)" \
+    "Audio only (mp3)" \
+    "Custom format ID" \
+    "List available formats" \
+    "Media info (no download)" \
+    "Subtitles only" \
+    "Playlist (best)" \
+    "Playlist range (best)" \
+    "Cancel" | gum choose --header $'YT-dlp Menu:\n' --show-help=false --padding "1 1") || return
+
+  [[ "$action" == "Cancel" ]] && return
+
+  if [[ "$action" != "List available formats" ]]; then
+    echo
+    url=$(gum input --placeholder "Paste URL") || return
+  else
+    echo
+    url=$(gum input --placeholder "Paste URL to inspect formats") || return
+  fi
+
+  [[ -z "$url" ]] && return
+
+  case "$action" in
+    "Best video + audio")
+      quality=$(printf "%s\n" \
+        "Best available" \
+        "2160p" \
+        "1440p" \
+        "1080p" \
+        "720p" \
+        "480p" \
+        "Cancel" | gum choose --header $'Choose quality\n' --show-help=false --padding "1 1") || return
+
+      [[ "$quality" == "Cancel" ]] && return
+
+      case "$quality" in
+        "Best available") format_selector="bv*+ba/b" ;;
+        "2160p") format_selector="bv*[height<=2160]+ba/b[height<=2160]" ;;
+        "1440p") format_selector="bv*[height<=1440]+ba/b[height<=1440]" ;;
+        "1080p") format_selector="bv*[height<=1080]+ba/b[height<=1080]" ;;
+        "720p") format_selector="bv*[height<=720]+ba/b[height<=720]" ;;
+        "480p") format_selector="bv*[height<=480]+ba/b[height<=480]" ;;
+      esac
+
+      gum style --foreground 212 "Mode: best video + audio"
+      command yt-dlp -f "$format_selector" "$url"
+      ;;
+    "Download section (video)")
+      quality=$(printf "%s\n" \
+        "Best available" \
+        "1080p" \
+        "720p" \
+        "480p" \
+        "Cancel" | gum choose --header $'Choose quality\n' --show-help=false --padding "1 1") || return
+
+      [[ "$quality" == "Cancel" ]] && return
+
+      case "$quality" in
+        "Best available") format_selector="bv*+ba/b" ;;
+        "1080p") format_selector="bv*[height<=1080]+ba/b[height<=1080]" ;;
+        "720p") format_selector="bv*[height<=720]+ba/b[height<=720]" ;;
+        "480p") format_selector="bv*[height<=480]+ba/b[height<=480]" ;;
+      esac
+
+      echo
+      start_ts=$(gum input --placeholder "Start time (optional, e.g. 00:01:30)") || return
+      echo
+      end_ts=$(gum input --placeholder "End time (optional, e.g. 00:03:40)") || return
+      section_expr="*${start_ts}-${end_ts}"
+
+      if [[ -z "$start_ts" && -z "$end_ts" ]]; then
+        gum style --foreground 196 "Provide at least start or end time."
+        return 1
+      fi
+
+      gum style --foreground 212 "Mode: section video (${section_expr})"
+      command yt-dlp -f "$format_selector" --download-sections "$section_expr" --force-keyframes-at-cuts "$url"
+      ;;
+    "Download section (audio m4a)")
+      echo
+      start_ts=$(gum input --placeholder "Start time (optional, e.g. 00:01:30)") || return
+      echo
+      end_ts=$(gum input --placeholder "End time (optional, e.g. 00:03:40)") || return
+      section_expr="*${start_ts}-${end_ts}"
+
+      if [[ -z "$start_ts" && -z "$end_ts" ]]; then
+        gum style --foreground 196 "Provide at least start or end time."
+        return 1
+      fi
+
+      gum style --foreground 212 "Mode: section audio m4a (${section_expr})"
+      command yt-dlp -x --audio-format m4a --download-sections "$section_expr" --force-keyframes-at-cuts "$url"
+      ;;
+    "Audio only (m4a)")
+      gum style --foreground 212 "Mode: audio only (m4a)"
+      command yt-dlp -x --audio-format m4a "$url"
+      ;;
+    "Audio only (mp3)")
+      gum style --foreground 212 "Mode: audio only (mp3)"
+      command yt-dlp -x --audio-format mp3 "$url"
+      ;;
+    "Custom format ID")
+      echo
+      format_id=$(gum input --placeholder "Format ID (example: 137+140 or 22)") || return
+      [[ -z "$format_id" ]] && return
+      gum style --foreground 212 "Mode: custom format ($format_id)"
+      command yt-dlp -f "$format_id" "$url"
+      ;;
+    "List available formats")
+      gum style --foreground 212 "Mode: list formats"
+      command yt-dlp -F "$url"
+      ;;
+    "Media info (no download)")
+      gum style --foreground 212 "Mode: media info"
+      command yt-dlp --skip-download --print "title=%(title)s" --print "uploader=%(uploader)s" --print "duration=%(duration>%H:%M:%S)s" --print "view_count=%(view_count)s" --print "upload_date=%(upload_date)s" "$url"
+      ;;
+    "Subtitles only")
+      sub_lang=$(printf "%s\n" \
+        "en.*" \
+        "all" \
+        "es.*" \
+        "fr.*" \
+        "Cancel" | gum choose --header $'Choose subtitle language\n' --show-help=false --padding "1 1") || return
+
+      [[ "$sub_lang" == "Cancel" ]] && return
+
+      gum style --foreground 212 "Mode: subtitles only"
+      command yt-dlp --skip-download --write-subs --write-auto-subs --sub-langs "$sub_lang" --convert-subs srt "$url"
+      ;;
+    "Playlist (best)")
+      quality=$(printf "%s\n" \
+        "Best available" \
+        "1080p" \
+        "720p" \
+        "480p" \
+        "Cancel" | gum choose --header $'Choose playlist quality\n' --show-help=false --padding "1 1") || return
+
+      [[ "$quality" == "Cancel" ]] && return
+
+      case "$quality" in
+        "Best available") format_selector="bv*+ba/b" ;;
+        "1080p") format_selector="bv*[height<=1080]+ba/b[height<=1080]" ;;
+        "720p") format_selector="bv*[height<=720]+ba/b[height<=720]" ;;
+        "480p") format_selector="bv*[height<=480]+ba/b[height<=480]" ;;
+      esac
+
+      gum style --foreground 212 "Mode: playlist (best)"
+      command yt-dlp --yes-playlist -f "$format_selector" "$url"
+      ;;
+    "Playlist range (best)")
+      quality=$(printf "%s\n" \
+        "Best available" \
+        "1080p" \
+        "720p" \
+        "480p" \
+        "Cancel" | gum choose --header $'Choose playlist quality\n' --show-help=false --padding "1 1") || return
+
+      [[ "$quality" == "Cancel" ]] && return
+
+      case "$quality" in
+        "Best available") format_selector="bv*+ba/b" ;;
+        "1080p") format_selector="bv*[height<=1080]+ba/b[height<=1080]" ;;
+        "720p") format_selector="bv*[height<=720]+ba/b[height<=720]" ;;
+        "480p") format_selector="bv*[height<=480]+ba/b[height<=480]" ;;
+      esac
+
+      echo
+      pstart=$(gum input --placeholder "Playlist start index (default: 1)") || return
+      echo
+      pend=$(gum input --placeholder "Playlist end index (optional)") || return
+      [[ -z "$pstart" ]] && pstart=1
+
+      gum style --foreground 212 "Mode: playlist range (${pstart}-${pend:-end})"
+      if [[ -n "$pend" ]]; then
+        command yt-dlp --yes-playlist --playlist-start "$pstart" --playlist-end "$pend" -f "$format_selector" "$url"
+      else
+        command yt-dlp --yes-playlist --playlist-start "$pstart" -f "$format_selector" "$url"
+      fi
+      ;;
+  esac
 }

@@ -24,14 +24,29 @@
 # Subtitles
 # ----------------------------
 --write-auto-subs
---sub-lang en
+--sub-langs "en.*"
 --convert-subs srt
 
 # ----------------------------
 # Stability
 # ----------------------------
 --extractor-args "youtube:player_client=android"
+--retries 10
+--fragment-retries 10
+--concurrent-fragments 4
 --console-title
 --no-mtime
 --newline
 -c
+
+# ----------------------------
+# Metadata & Thumbnails
+# ----------------------------
+--embed-metadata
+--embed-thumbnail
+
+# ----------------------------
+# Gum Hooks
+# ----------------------------
+--exec "before_dl:command -v gum >/dev/null 2>&1 && gum style --foreground 212 --bold 'Starting download' || true"
+--exec "after_move:command -v gum >/dev/null 2>&1 && gum style --foreground 42 'Saved: %(filepath)s' || true"

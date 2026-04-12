@@ -240,10 +240,20 @@ fzf-theme() {
   theme_name=$(echo "$chosen" | cut -d'│' -f1 | tr -d ' ')
 
   _fzf_apply_theme "$theme_name"
-  echo "✔ fzf theme → $theme_name"
 
   mkdir -p ~/.config/fzf
   echo "$theme_name" > ~/.config/fzf/theme
+
+  # Open fzf in the config folder right after applying a theme.
+  (
+    cd ~/.config/fzf || exit
+    command fzf \
+      --border-label=' ⟡  FZF CONFIG  ⟡ ' \
+      --border-label-pos=center \
+      --prompt='fzf/ ' \
+      --preview='~/.config/fzf/preview.sh {}' \
+      --preview-window=right:58%:wrap:border-left
+  )
 }
 
 # ── Boot: load saved theme or default ───────

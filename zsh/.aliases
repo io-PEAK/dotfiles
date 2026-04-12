@@ -24,7 +24,18 @@ alias gss='git submodule status'
 alias gi='git status --ignored'
 
 alias ga='git add'
-alias gc='git commit -m'
+gc() {
+	local msg
+
+	if [[ $# -gt 0 ]]; then
+		msg="$*"
+	else
+		msg=$(gum input --value "" --placeholder "Commit message") || return
+	fi
+
+	[[ -z "$msg" ]] && return
+	git commit -m "$msg"
+}
 
 alias gp='git push'
 alias gpl='git pull'
@@ -34,7 +45,13 @@ alias gl='git log --oneline --graph --decorate'
 alias gb='git branch'
 
 # Safer branch operations (replace checkout)
-alias gco='git switch'            # use: gco branch-name
+gco() {
+	local branch
+	branch=$(git branch | sed 's/* //' | fzf) || return
+
+	gum confirm "Switch to $branch?" && \
+		git switch "$branch"
+}            # use: gco branch-name
 alias gcb='git switch -c'         # use: gcb new-branch
 
 # Diff
@@ -53,24 +70,20 @@ alias gpop='git stash pop'
 # Undo
 alias gundo='git reset --soft HEAD~1'  # undo last commit, keep changes
 
-# lazygit
-alias lg='lazygit'
-
-# tig aliases
-alias tg='tig'
-alias tgs='tig status'
-alias tgb='tig blame'              # Shows who last modified each line of a file
-alias tgsf='tig show'              # usage: tgsf <commit|hash|-|branch|-|ref|>
-alias tgl='tig --all'
-
 # Create + Push Repo with gh
 gpub() {
-  gh repo create "$1" --public --source=. --remote=origin --push
+	local name=${1:-$(gum input --placeholder "Repo name")} || return
+
+	gum confirm "Create public repo '$name'?" && \
+		gh repo create "$name" --public --source=. --remote=origin --push
 }
 
 # Add SSH Remote
 gremote() {
-  git remote add origin git@github.com:io-PEAK/"$1".git
+	local name=${1:-$(gum input --placeholder "Repo name")} || return
+
+	gum confirm "Add remote '$name'?" && \
+		git remote add origin git@github.com:io-PEAK/"$name".git
 }
 
 #############################################################################
