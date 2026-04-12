@@ -1,8 +1,5 @@
-# ============================================================================
-# FILE: ~/.config/lazygit/config.yml
-# ============================================================================
 # Lazygit configuration file
-
+# Use lazy-theme for changing theme
 gui:
   # Nerd fonts icons
   nerdFontsVersion: "3"
@@ -31,22 +28,36 @@ gui:
   theme:
     lightTheme: false
     activeBorderColor:
-      - "#7AA2F7"
+      - "#CBA6F7"
       - bold
     inactiveBorderColor:
-      - "#3B4261"
+      - "#CBA6F7"
     optionsTextColor:
-      - "#7DCFFF"
+      - "#CBA6F7"
     selectedLineBgColor:
-      - "#283457"
+      - "#313244"
+    selectedLineFgColor:
+      - "#CDD6F4"
     cherryPickedCommitBgColor:
-      - "#BB9AF7"
+      - "#F5C2E7"
     cherryPickedCommitFgColor:
-      - "#C0CAF5"
+      - "#1E1E2E"
     unstagedChangesColor:
-      - "#F7768E"
+      - "#F38BA8"
+    stagedChangesColor:
+      - "#A6E3A1"
+    untrackedFilesColor:
+      - "#F9E2AF"
     defaultFgColor:
-      - "#C0CAF5"
+      - "#CDD6F4"
+    searchMatchColor:
+      - "#89DCEB"
+    markedBaseCommitColor:
+      - "#FAB387"
+    commitHashColor:
+      - "#CBA6F7"
+    authorColor:
+      - "#74C7EC"
       # stagedChangesColor:      # Color of the staged changes indicator
       #   - "#9ECE6A"
       # untrackedFilesColor:     # Color of icons for untracked files (e.g. new files)

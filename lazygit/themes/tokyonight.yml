@@ -3,36 +3,36 @@ gui:
   theme:
     lightTheme: false
     activeBorderColor:
-      - "#CBA6F7"
+      - "#7AA2F7"
       - bold
     inactiveBorderColor:
-      - "#CBA6F7"
+      - "#3B4261"
     optionsTextColor:
-      - "#CBA6F7"
+      - "#7DCFFF"
     selectedLineBgColor:
-      - "#313244"
+      - "#283457"
     selectedLineFgColor:
-      - "#CDD6F4"
+      - "#C0CAF5"
     cherryPickedCommitBgColor:
-      - "#F5C2E7"
+      - "#BB9AF7"
     cherryPickedCommitFgColor:
-      - "#1E1E2E"
+      - "#C0CAF5"
     unstagedChangesColor:
-      - "#F38BA8"
+      - "#F7768E"
     stagedChangesColor:
-      - "#A6E3A1"
+      - "#9ECE6A"
     untrackedFilesColor:
-      - "#F9E2AF"
+      - "#E0AF68"
     defaultFgColor:
-      - "#CDD6F4"
+      - "#C0CAF5"
     searchMatchColor:
-      - "#89DCEB"
+      - "#7DCFFF"
     markedBaseCommitColor:
-      - "#FAB387"
+      - "#FF9E64"
     commitHashColor:
-      - "#CBA6F7"
+      - "#BB9AF7"
     authorColor:
-      - "#74C7EC"
+      - "#A9B1D6"
       # stagedChangesColor:      # Color of the staged changes indicator
       #   - "#9ECE6A"
       # untrackedFilesColor:     # Color of icons for untracked files (e.g. new files)
