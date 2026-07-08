@@ -4,7 +4,7 @@
 
 return {
 	"vyfor/cord.nvim",
-	build = "./build || .\\build",
+	build = ":Cord update",
 	event = "VeryLazy",
 	opts = {
 		usercmds = true,
@@ -27,7 +27,6 @@ return {
 			swap_icons = true,
 			workspace_blacklist = {},
 		},
-		
 		lsp = {
 			show_problem_count = false,
 			severity = 1,
@@ -42,13 +41,13 @@ return {
 			tooltip = "💤",
 		},
 		text = {
-			viewing = "  ",
-			editing = "  ",
-			file_browser = "  ",
-			plugin_manager = "  ",
-			lsp_manager = "  ",
-			vcs = "  ",
-			workspace = "  ", 
+			viewing = " ",
+			editing = " ",
+			file_browser = " ",
+			plugin_manager = " ",
+			lsp_manager = " ",
+			vcs = " ",
+			workspace = " ", 
 		},
 		buttons = {},
 	},

@@ -3,7 +3,7 @@
 -- ============================================================================
 return {
 	"nvim-telescope/telescope.nvim",
-	enabled = false,
+	enabled = false, -- Using fzf-lua instead of telescope
 	version = "*",
 	dependencies = {
 		"nvim-lua/plenary.nvim",
