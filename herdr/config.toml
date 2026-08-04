@@ -134,6 +134,8 @@ pane_borders = true
 pane_gaps = true
 mouse_capture = true
 copy_on_select = true
+sidebar_collapsed_mode = "hidden"  
+hide_tab_bar_when_single_tab = true
 
 # ================================
 # TOAST
