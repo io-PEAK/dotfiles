@@ -1,3 +1,4 @@
+
 # Homebrew
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
@@ -10,3 +11,6 @@ export PATH="/usr/local/opt/llvm/bin:$PATH"
 
 # PostgreSQL
 export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
+
+# Antigravity-ide
+export PATH="$HOME/.antigravity-ide/antigravity-ide/bin:$PATH"
