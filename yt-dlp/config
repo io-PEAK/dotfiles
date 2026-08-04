@@ -49,4 +49,4 @@
 # Gum Hooks
 # ----------------------------
 --exec "before_dl:command -v gum >/dev/null 2>&1 && gum style --foreground 212 --bold 'Starting download' || true"
---exec "after_move:command -v gum >/dev/null 2>&1 && gum style --foreground 42 'Saved: %(filepath)s' || true"
+--exec "after_move:command -v gum >/dev/null 2>&1 && gum style --foreground 42 Saved: %(filepath)q || true"
