@@ -19,7 +19,11 @@ fpath=($ZDOTDIR/plugins/zsh-completions/src $fpath)
 # Completion system cache — moved to cache
 ZSH_COMPDUMP="$XDG_CACHE_HOME/zsh/.zcompdump"
 autoload -Uz compinit
-compinit -d "$ZSH_COMPDUMP"
+if [[ -n "$ZSH_COMPDUMP(N.m-1)" ]]; then
+  compinit -C -d "$ZSH_COMPDUMP"
+else
+  compinit -i -d "$ZSH_COMPDUMP"
+fi
 
 #EZA COlORING CONFIG
 export EZA_COLORS="di=1;94:fi=1;32:ln=1;96:ex=1;32:pi=1;33:so=1;35:bd=1;33:cd=1;33:or=1;31:mi=1;31"
@@ -48,7 +52,7 @@ export LS_COLORS="$(vivid generate tokyonight-night)"
 
 typeset -A ZSH_HIGHLIGHT_STYLES
 
-ZSH_HIGHLIGHT_STYLES[command]='fg=blue,bold'        # external commands (nvim, git)
+ZSH_HIGHLIGHT_STYLES[command]='fg=blue,bold'       # external commands (nvim, git)
 ZSH_HIGHLIGHT_STYLES[builtin]='fg=green,bold'      # shell builtins (cd, echo)
 ZSH_HIGHLIGHT_STYLES[function]='fg=white,bold'     # shell functions
 ZSH_HIGHLIGHT_STYLES[alias]='fg=white,bold'        # shell aliases (cls, ll, gs)
@@ -85,8 +89,8 @@ ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=white,dim'
 # Source fzf configuration
 [ -f "$HOME/github/dotfiles/fzf/fzf.zsh" ] && source "$HOME/github/dotfiles/fzf/fzf.zsh"
 
-# Source Starship
-eval "$(STARSHIP_CONFIG="$HOME/github/dotfiles/starship/starship.toml" starship init zsh)"
+# Source Starship (Static loading)
+[ -f "$ZDOTDIR/.starship_init.zsh" ] && source "$ZDOTDIR/.starship_init.zsh" 
 
 # Tmuxinator path
 export TMUXINATOR_CONFIG="$HOME/.config/tmux/tmuxinator"
@@ -103,14 +107,7 @@ unset KEYTIMEOUT
 # File limit
 ulimit -n 10240
 
-#compdef opencode
-###-begin-opencode-completions-###
-#
-# yargs command completion script
-#
-# Installation: opencode completion >> ~/.zshrc
-#    or opencode completion >> ~/.zprofile on OSX.
-#
+# compdef opencode
 _opencode_yargs_completions()
 {
   local reply
@@ -129,4 +126,3 @@ if [[ "'${zsh_eval_context[-1]}" == "loadautofunc" ]]; then
 else
   compdef _opencode_yargs_completions opencode
 fi
-###-end-opencode-completions-###
