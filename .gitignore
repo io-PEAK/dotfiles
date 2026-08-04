@@ -20,3 +20,14 @@ karabiner/automatic_backups
 
 # fzf
 fzf/theme
+
+# herdr
+herdr-client.log
+herdr-server.log
+session.json
+session-history.json
+release-notes.json
+.plugins.lock
+plugins/
+sessions/
+*.sock

@@ -19,6 +19,7 @@
 - <img src="https://avatars.githubusercontent.com/u/136235211?s=48&v=4" width="16" /> [Fastfetch](#fastfetch)
 - <img src="https://github.com/io-PEAK/dotfiles/blob/main/images/readme/neovim.ico" width="16" /> [Neovim](#neovim)
 - <img src="images/readme/tmux.svg" width="16" /> [Tmux](#tmux)
+- <img src="images/readme/herdr.png" width="16" /> [Herdr](#herdr)
 
  **Repo Overview**
 ---
@@ -309,6 +310,23 @@ My Tmux configuration is stored in `~/.config/tmux/tmux.conf`, which is a symlin
 > [!NOTE] 
 >
 > Tmux expects its configuration file to be named `tmux.conf`
+>
+
+**Herdr**
+---
+### Preview :
+
+<img src="images/herdr.png" width="700" />
+
+### Install Herdr
+```bash
+brew install herdr
+```
+My Herdr configuration is stored in `~/.config/herdr/config.toml`, which is a symlink to `~/github/dotfiles/herdr/config.toml`.
+- [`herdr config`](herdr/config.toml)
+> [!NOTE] 
+>
+> Herdr expects its configuration file to be named `config.toml`
 >
 
 ---

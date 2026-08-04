@@ -1,0 +1,164 @@
+# ================================
+# GENERAL
+# ================================
+onboarding = false
+
+# ================================
+# PREFIX
+# ================================
+[keys]
+prefix = "ctrl+a"
+
+# ================================
+# PANE NAV
+# ================================
+focus_pane_left  = "prefix+h"
+focus_pane_down  = "prefix+j"
+focus_pane_up    = "prefix+k"
+focus_pane_right = "prefix+l"
+
+swap_pane_left  = "prefix+shift+h"
+swap_pane_down  = "prefix+shift+j"
+swap_pane_up    = "prefix+shift+k"
+swap_pane_right = "prefix+shift+l"
+
+last_pane = "prefix+u"
+
+# ================================
+# SPLITS
+# ================================
+split_vertical   = "prefix+/"
+split_horizontal = "prefix+minus"
+
+# ================================
+# CLOSE
+# ================================
+close_pane = "prefix+x"
+close_tab  = "prefix+shift+x"
+
+# ================================
+# ZOOM
+# ================================
+zoom = "prefix+f"
+
+# ================================
+# TABS (tab = tmux window)
+# ================================
+new_tab      = "prefix+c"
+previous_tab = "prefix+p"
+next_tab     = "prefix+n"
+
+# ================================
+# WORKSPACES (workspace = tmux session)
+# ================================
+new_workspace      = "prefix+shift+n"
+previous_workspace = "prefix+left"
+next_workspace      = "prefix+right"
+workspace_picker   = "prefix+w"
+
+# ================================
+# GIT WORKTREES
+# ================================
+new_worktree    = "prefix+shift+g"
+open_worktree   = "prefix+g"
+
+# ================================
+# AGENTS
+# ================================
+previous_agent = "ctrl+alt+p"
+next_agent     = "ctrl+alt+n"
+
+# ================================
+# RENAME
+# ================================
+rename_tab       = "prefix+shift+t"
+rename_workspace = "prefix+shift+w"
+
+# ================================
+# RELOAD / RESIZE
+# ================================
+reload_config = "prefix+r"
+resize_mode   = "prefix+shift+r"
+
+# ================================
+# COPY MODE / SCROLLBACK
+# ================================
+copy_mode      = "prefix+["
+edit_scrollback = "prefix+e"
+
+# ================================
+# NAVIGATOR
+# ================================
+goto = "prefix+shift+f"
+
+# ================================
+# SIDEBAR
+# ================================
+toggle_sidebar = "prefix+b"
+
+# ================================
+# DETACH
+# ================================
+detach = "prefix+q"
+
+# ================================
+# CUSTOM: kill session 
+# also wipes session.json so next launch starts fresh, not restored
+# ================================
+[[keys.command]]
+key = "prefix+shift+q"
+type = "shell"
+command = "herdr server stop && rm -f ~/.config/herdr/session.json"
+description = "kill session (fresh start next time)"
+
+# ================================
+# INDEXED 
+# ================================
+[keys.indexed]
+agents = "ctrl+alt"   # ctrl+alt+1..9 jumps to agent by index
+
+
+# ================================
+# THEME
+# ================================
+[theme]
+name = "catppuccin"
+auto_switch = false
+
+# ================================
+# UI
+# ================================
+[ui]
+accent = "#f38ba8"
+pane_borders = true
+pane_gaps = true
+mouse_capture = true
+copy_on_select = true
+
+# ================================
+# TOAST
+# ================================
+[ui.toast]
+delivery = "herdr"
+delay_seconds = 0
+
+[ui.toast.herdr]
+position = "top-right"
+
+# ================================
+# SESSION / AGENT RESTORE
+# ================================
+[session]
+resume_agents_on_restore = true
+
+# ================================
+# ADVANCED
+# ================================
+[advanced]
+scrollback_limit_bytes = 10000000
+
+# ================================
+# EXPERIMENTAL: native kitty image graphics
+# ================================
+[experimental]
+kitty_graphics = true
