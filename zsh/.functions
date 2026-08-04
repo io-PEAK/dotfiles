@@ -1,23 +1,43 @@
 ########################### COLOR SCRIPT #########################################
 
 color() {                          
-    if [[ $# -eq 0 ]]; then
-    echo       
-     gum style --bold "📦 Available colorscript patterns:"
-    echo
-        colorscript -l
-        echo
-        gum style "💡 Usage: color <pattern> | color random | color list"
+  emulate -L zsh
+  setopt localoptions no_aliases
+
+  if [[ $# -eq 0 ]]; then
+    local choice
+
+    choice=$(printf "%s\n" \
+      "Random" \
+      "List" \
+      "Cancel" \
+      "$(colorscript -l)" | gum choose --header $'Choose a colorscript pattern:\n' --show-help=false --padding "1 1") || return
+
+    [[ "$choice" == "Cancel" ]] && return
+
+    case "$choice" in
+      "Random")
+        command colorscript -r
+        ;;
+      "List")
+        command colorscript -l
+        ;;
+      *)
+        command colorscript -e "$choice"
+        ;;
+    esac
+    return
+  fi
+
+  if [[ "$1" == "list" ]]; then   
+    command colorscript -l                
         
-    elif [[ "$1" == "list" ]]; then   
-        colorscript -l                
+  elif [[ "$1" == "random" ]]; then 
+    command colorscript -r                
         
-    elif [[ "$1" == "random" ]]; then 
-        colorscript -r                
-        
-    else                              
-        colorscript -e "$1"            
-    fi
+  else                              
+    command colorscript -e "$1"            
+  fi
 }
 
 ########################### BATTERY INFORMATION ################################
@@ -91,7 +111,7 @@ batinfo() {
   done
 }
  
-############################### Clean Branch history #######################################
+############################### git functions #######################################
 clean_branch() {
   local branch="${1:-main}"
   local orphan_branch="clean-$branch"
@@ -245,7 +265,7 @@ git() {
       repo_name=$(gum input --placeholder "Repo name") || return
       [[ -z "$repo_name" ]] && return
       gum confirm "Create public repo '$repo_name'?" && \
-        command gh repo create "$repo_name" --public --source=. --remote=origin --push
+        command gh repo create "$repo_name" --public --source=. --remote=origin 
       ;;
     "add ssh remote")
       echo
