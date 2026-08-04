@@ -244,16 +244,15 @@ fzf-theme() {
   mkdir -p ~/.config/fzf
   echo "$theme_name" > ~/.config/fzf/theme
 
-  # Open fzf in the config folder right after applying a theme.
-  (
-    cd ~/.config/fzf || exit
-    command fzf \
-      --border-label=' ⟡  FZF CONFIG  ⟡ ' \
-      --border-label-pos=center \
-      --prompt='fzf/ ' \
-      --preview='~/.config/fzf/preview.sh {}' \
-      --preview-window=right:58%:wrap:border-left
-  )
+  _fzf_open_normal_window
+}
+
+_fzf_open_normal_window() {
+  fd --type f --hidden --follow --exclude .git | fzf_with_preview \
+    --border-label=' ⟡  FILES  ⟡ ' \
+    --border-label-pos=center \
+    --preview='~/.config/fzf/preview.sh {}' \
+    --preview-window=right:58%:wrap:border-left
 }
 
 # ── Boot: load saved theme or default ───────
