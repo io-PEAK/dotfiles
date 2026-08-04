@@ -182,6 +182,10 @@ if.app-id = 'com.bitwarden.desktop'      # Bitwarden app
 run = ['layout floating']                # Always floating
 
 [[on-window-detected]]
+if.app-id = 'com.apple.AppStore'         # App Store
+run = ['layout floating']                # Always floating
+
+[[on-window-detected]]
 if.app-id = 'com.apple.finder'           # Finder
 run = ['layout floating']                # Always floating
 
