@@ -42,6 +42,7 @@ dotfiles/
 ├── ghostty
 │   ├── shaders
 │   └── themes
+├── herdr
 ├── images
 │   └── readme
 ├── karabiner
