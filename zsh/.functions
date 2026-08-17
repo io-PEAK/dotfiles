@@ -40,6 +40,115 @@ color() {
   fi
 }
 
+tectonic() {
+  emulate -L zsh
+  setopt localoptions no_aliases
+
+  local tectonic_bin
+  if ! tectonic_bin="$(command -v tectonic 2>/dev/null)"; then
+    gum style --foreground 196 "tectonic is not installed"
+    return 127
+  fi
+
+  local -a tex_files
+  tex_files=("${(@f)$(find . -maxdepth 2 -type f -name '*.tex' -print 2>/dev/null)}")
+  tex_files=("${(@)tex_files:#}")
+
+  local compile_one
+  compile_one() {
+    local file="$1"
+    local binary="$2"
+
+    [[ -n "$file" ]] || return 1
+    [[ -f "$file" ]] || {
+      gum style --foreground 196 "File not found: $file"
+      return 1
+    }
+
+    local outdir pdf_path
+    outdir="${file:h}"
+    pdf_path="${file:r}.pdf"
+
+    gum spin --spinner dot --title "Compiling ${file:t}..." -- \
+      "$binary" --keep-logs --outdir "$outdir" "$file" >/dev/null 2>&1
+
+    if [[ -f "$pdf_path" ]]; then
+      gum style --foreground 42 "✓ PDF ready: $pdf_path"
+
+      if command -v open >/dev/null 2>&1; then
+        open "$pdf_path" >/dev/null 2>&1 &
+      elif command -v xdg-open >/dev/null 2>&1; then
+        xdg-open "$pdf_path" >/dev/null 2>&1 &
+      fi
+
+      return 0
+    fi
+
+    gum style --foreground 196 "Compilation failed for: $file"
+    return 1
+  }
+
+  if [[ $# -gt 0 ]]; then
+    compile_one "$1" "$tectonic_bin"
+    return $?
+  fi
+
+  if (( ${#tex_files} == 0 )); then
+    local action
+    action=$(printf '%s\n' \
+      "Enter file path" \
+      "Cancel" | gum choose \
+      --header "No .tex files found in $(pwd)" \
+      --height 10 \
+      --padding "1 1" \
+      --show-help=false) || return
+
+    if [[ "$action" == "Cancel" ]]; then
+      return 0
+    fi
+
+    echo
+    local entered_file
+    entered_file=$(gum input --placeholder "Path to .tex file") || return
+    [[ -n "$entered_file" ]] || return 1
+
+    compile_one "$entered_file" "$tectonic_bin"
+    return $?
+  fi
+
+  local choice
+  choice=$(printf '%s\n' "${tex_files[@]}" "Compile all" "Cancel" | gum choose \
+    --header "Select a .tex file" \
+    --height 14 \
+    --padding "1 1" \
+    --show-help=false) || return
+
+  case "$choice" in
+    "Cancel")
+      return 0
+      ;;
+    "Compile all")
+      local compiled_count=0
+      local file
+      for file in "${tex_files[@]}"; do
+        if compile_one "$file" "$tectonic_bin"; then
+          (( compiled_count += 1 ))
+        fi
+      done
+
+      if (( compiled_count > 0 )); then
+        gum style --foreground 42 "✓ Compiled $compiled_count PDF(s)"
+        return 0
+      fi
+      return 1
+      ;;
+    *)
+      compile_one "$choice" "$tectonic_bin"
+      return $?
+      ;;
+  esac
+}
+
 ########################### BATTERY INFORMATION ################################
 batinfo() {
 
@@ -683,4 +792,218 @@ yt-dlp() {
       fi
       ;;
   esac
+}
+
+########################### MAC SYSTEM CONFIGURE ################################
+
+mac() {
+  emulate -L zsh
+  setopt localoptions no_aliases
+
+  if ! command -v gum >/dev/null 2>&1; then
+    echo "gum is required for this interactive menu."
+    return 127
+  fi
+
+  local action choice choice2 speed delay loc format hours h_num seconds
+  local -a main_menu kb_menu lid_menu gate_menu finder_menu screen_menu dock_menu timer_menu
+
+  _pick() {
+    local out rc
+    out=$(gum choose "$@")
+    rc=$?
+    (( rc != 0 )) && printf '\033[1A\033[2K' >&2
+    print -r -- "$out"
+    return $rc
+  }
+
+  main_menu=(
+    "Keyboard Speed (Fast Typing)"
+    "Lid-Close Sleep Mode"
+    "App Security (Gatekeeper)"
+    "Desktop & Finder Visuals"
+    "Screenshot Controls"
+    "Dock & Window Tweaks"
+    "Network Quick Fix"
+    "Clear System Cache"
+    "Exit"
+  )
+
+  while true; do
+    action=$(print -l "${main_menu[@]}" | _pick --header "Mac Control Panel:" --show-help=false --padding "1 1") || return 0
+
+    [[ "$action" == "Exit" || -z "$action" ]] && return 0
+
+    case "$action" in
+      "Keyboard Speed (Fast Typing)")
+        kb_menu=("Make typing insanely fast" "Reset to Mac defaults" "<- Go Back")
+        echo ""
+        choice=$(print -l "${kb_menu[@]}" | _pick --header "Select Key Repeat Tuning:" --show-help=false) || continue
+        [[ "$choice" == "<- Go Back" || -z "$choice" ]] && continue
+
+        if [[ "$choice" == "Make typing insanely fast" ]]; then
+          defaults write NSGlobalDomain KeyRepeat -int 1
+          defaults write NSGlobalDomain InitialKeyRepeat -int 10
+          gum style --foreground 42 "✅ Keyboard speed set to ultra-fast!"
+        elif [[ "$choice" == "Reset to Mac defaults" ]]; then
+          defaults write NSGlobalDomain KeyRepeat -int 2
+          defaults write NSGlobalDomain InitialKeyRepeat -int 15
+          gum style --foreground 42 "✅ Restored standard Mac keyboard limits."
+        fi
+        return 0
+        ;;
+
+      "Lid-Close Sleep Mode")
+        lid_menu=("Keep awake when lid is closed" "Allow sleep on lid close (Default)" "<- Go Back")
+        echo ""
+        choice=$(print -l "${lid_menu[@]}" | _pick --header "Configure System Sleep:" --show-help=false) || continue
+        [[ "$choice" == "<- Go Back" || -z "$choice" ]] && continue
+
+        if [[ "$choice" == "Keep awake when lid is closed" ]]; then
+          timer_menu=("Indefinitely (No Timer)" "1 Hour" "2 Hours" "4 Hours" "<- Go Back")
+          echo ""
+          hours=$(print -l "${timer_menu[@]}" | _pick --header "Set sleep prevention timeout?" --show-help=false) || continue
+          [[ "$hours" == "<- Go Back" || -z "$hours" ]] && continue
+
+          gum style --foreground 214 "🔑 Requires administrator password to alter sleep policies..."
+          sudo pmset -a disablesleep 1
+
+          if [[ "$hours" == "Indefinitely (No Timer)" ]]; then
+            gum style --foreground 42 "✅ Sleep disabled indefinitely! Remember to turn it back off manually."
+          else
+            h_num=$(echo "$hours" | awk '{print $1}')
+            seconds=$(( h_num * 3600 ))
+            gum style --foreground 42 "✅ Sleep disabled for $hours. Re-enabling sleep in background..."
+
+            (
+              sleep "$seconds"
+              sudo pmset -a disablesleep 0
+              if command -v osascript >/dev/null 2>&1; then
+                osascript -e 'display notification "Lid-close timeout complete. Standard sleep restored." with title "Mac System Config"'
+              fi
+            ) &!
+          fi
+          return 0
+
+        elif [[ "$choice" == "Allow sleep on lid close (Default)" ]]; then
+          gum style --foreground 214 "🔑 Requires administrator password..."
+          sudo pmset -a disablesleep 0
+          gum style --foreground 42 "✅ Standard closed-lid sleep restored immediately."
+          return 0
+        fi
+        ;;
+
+      "App Security (Gatekeeper)")
+        gate_menu=("Allow apps downloaded from 'Anywhere'" "Enable standard Mac security" "<- Go Back")
+        echo ""
+        choice=$(print -l "${gate_menu[@]}" | _pick --header "Configure Security Rules:" --show-help=false) || continue
+        [[ "$choice" == "<- Go Back" || -z "$choice" ]] && continue
+
+        if [[ "$choice" == "Allow apps downloaded from 'Anywhere'" ]]; then
+          gum style --foreground 196 --bold "⚠️ WARNING: This lowers security by letting unverified apps run."
+          gum confirm "Are you sure you want to disable Gatekeeper restrictions?" --show-help=false || continue
+          sudo spctl --master-disable
+          gum style --foreground 42 "✅ Gatekeeper disabled."
+        elif [[ "$choice" == "Enable standard Mac security" ]]; then
+          sudo spctl --master-enable
+          gum style --foreground 42 "✅ Gatekeeper re-enabled."
+        fi
+        return 0
+        ;;
+
+      "Desktop & Finder Visuals")
+        finder_menu=("Hide all Desktop Icons" "Show all Desktop Icons" "Show hidden files in Finder" "Hide hidden files in Finder" "<- Go Back")
+        echo ""
+        choice=$(print -l "${finder_menu[@]}" | _pick --header "Finder Tweak Settings:" --show-help=false) || continue
+        [[ "$choice" == "<- Go Back" || -z "$choice" ]] && continue
+
+        case "$choice" in
+          "Hide all Desktop Icons")
+            defaults write com.apple.finder CreateDesktop false && killall Finder
+            gum style --foreground 42 "✅ Desktop icons hidden!"
+            ;;
+          "Show all Desktop Icons")
+            defaults write com.apple.finder CreateDesktop true && killall Finder
+            gum style --foreground 42 "✅ Desktop icons restored."
+            ;;
+          "Show hidden files in Finder")
+            defaults write com.apple.finder AppleShowAllFiles true && killall Finder
+            gum style --foreground 42 "✅ Hidden system files revealed."
+            ;;
+          "Hide hidden files in Finder")
+            defaults write com.apple.finder AppleShowAllFiles false && killall Finder
+            gum style --foreground 42 "✅ Hidden files tucked away."
+            ;;
+        esac
+        return 0
+        ;;
+
+      "Screenshot Controls")
+        screen_menu=("Change target folder destination" "Change file format type" "<- Go Back")
+        echo ""
+        choice=$(print -l "${screen_menu[@]}" | _pick --header "Screenshot Tweaks:" --show-help=false) || continue
+        [[ "$choice" == "<- Go Back" || -z "$choice" ]] && continue
+
+        if [[ "$choice" == "Change target folder destination" ]]; then
+          echo ""
+          loc=$(printf "%s\n" "Desktop" "Downloads" "<- Go Back" | _pick --header "Choose target folder:" --show-help=false) || continue
+          [[ "$loc" == "<- Go Back" || -z "$loc" ]] && continue
+          defaults write com.apple.screencapture location ~/"$loc" && killall SystemUIServer
+          gum style --foreground 42 "✅ Screenshots will save to $loc."
+        elif [[ "$choice" == "Change file format type" ]]; then
+          echo ""
+          format=$(printf "%s\n" "png" "jpg" "<- Go Back" | _pick --header "Choose file format:" --show-help=false) || continue
+          [[ "$format" == "<- Go Back" || -z "$format" ]] && continue
+          defaults write com.apple.screencapture type "$format" && killall SystemUIServer
+          gum style --foreground 42 "✅ Output changed to $format."
+        fi
+        return 0
+        ;;
+
+      "Dock & Window Tweaks")
+        dock_menu=("Make Dock appear instantly" "Reset Dock animation" "Disable wallpaper-click gesture" "Enable wallpaper-click gesture" "<- Go Back")
+        echo ""
+        choice=$(print -l "${dock_menu[@]}" | _pick --header "Interface Customisations:" --show-help=false) || continue
+        [[ "$choice" == "<- Go Back" || -z "$choice" ]] && continue
+
+        case "$choice" in
+          "Make Dock appear instantly")
+            defaults write com.apple.dock autohide-delay -float 0
+            defaults write com.apple.dock autohide-time-modifier -float 0 && killall Dock
+            gum style --foreground 42 "✅ Dock speed maximized!"
+            ;;
+          "Reset Dock animation")
+            defaults delete com.apple.dock autohide-delay
+            defaults delete com.apple.dock autohide-time-modifier && killall Dock
+            gum style --foreground 42 "✅ Dock animation reset."
+            ;;
+          "Disable wallpaper-click gesture")
+            defaults write com.apple.WindowManager EnableStandardClickToShowDesktop -bool false
+            gum style --foreground 42 "✅ Wallpaper-click disabled."
+            ;;
+          "Enable wallpaper-click gesture")
+            defaults write com.apple.WindowManager EnableStandardClickToShowDesktop -bool true
+            gum style --foreground 42 "✅ Wallpaper-click enabled."
+            ;;
+        esac
+        return 0
+        ;;
+
+      "Network Quick Fix")
+        gum confirm "⚡ Flush DNS cache and bounce your Wi-Fi interface?" --show-help=false || continue
+        gum spin --spinner dot --title "Resetting local network adapters..." -- \
+          bash -c "sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder; networksetup -setairportpower en0 off; sleep 1; networksetup -setairportpower en0 on"
+        gum style --foreground 42 "✅ Network stack refreshed!"
+        return 0
+        ;;
+
+      "Clear System Cache")
+        gum confirm "⚠️ Free up disk space by clearing user cache files?" --show-help=false || continue
+        gum spin --spinner dot --title "Purging logs and system temporary caches..." -- \
+          rm -rf ~/Library/Caches/*
+        gum style --foreground 42 "✅ Caches cleaned successfully!"
+        return 0
+        ;;
+    esac
+  done
 }
