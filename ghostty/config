@@ -20,7 +20,7 @@ macos-window-shadow = false
 macos-option-as-alt = true
 mouse-hide-while-typing = true 
 
-# Application
+# Application 
 quit-after-last-window-closed = true
 confirm-close-surface = false
 quick-terminal-animation-duration = 0.08
