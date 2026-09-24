@@ -1366,3 +1366,494 @@ diskwhat() {
   done
 }
 
+############################ FFMPEG TOOLS #################################
+
+ffmpeg() {
+  emulate -L zsh
+  setopt localoptions no_aliases
+
+  if ! command -v gum >/dev/null 2>&1; then
+    echo "gum is required for this interactive menu."
+    return 127
+  fi
+
+  if ! command -v ffmpeg >/dev/null 2>&1; then
+    echo "ffmpeg is required. Install it with: brew install ffmpeg"
+    return 127
+  fi
+
+  if ! command -v ffprobe >/dev/null 2>&1; then
+    echo "ffprobe is required. It normally comes with FFmpeg."
+    return 127
+  fi
+
+  local action choice input output format quality width start duration audio
+  local -a main_menu
+
+  _pick() {
+    local out rc
+    out=$(gum choose "$@")
+    rc=$?
+    (( rc != 0 )) && printf '\033[1A\033[2K' >&2
+    print -r -- "$out"
+    return $rc
+  }
+
+  _file_exists() {
+    if [[ ! -f "$1" ]]; then
+      gum style --foreground 196 "❌ File not found: $1"
+      return 1
+    fi
+    return 0
+  }
+
+  main_menu=(
+    "Convert Video"
+    "Compress Video"
+    "Trim Video"
+    "Resize Video"
+    "Convert Audio"
+    "Extract Audio"
+    "Remove Audio"
+    "Extract Frames"
+    "Create GIF"
+    "Merge Audio + Video"
+    "Inspect Media"
+    "Exit"
+  )
+
+  while true; do
+    action=$(print -l "${main_menu[@]}" | _pick \
+      --header "FFmpeg Control Panel:" \
+      --show-help=false \
+      --padding "1 1") || return 0
+
+    [[ "$action" == "Exit" || -z "$action" ]] && return 0
+
+    case "$action" in
+
+      # ---------------------------------------------------------
+      # CONVERT VIDEO
+      # ---------------------------------------------------------
+      "Convert Video")
+        echo ""
+        input=$(gum input --prompt "Input video: ")
+        [[ -z "$input" ]] && continue
+        _file_exists "$input" || continue
+
+        format=$(printf "%s\n" "mp4" "mkv" "webm" "mov" | \
+          _pick --header "Choose output format:" --show-help=false) || continue
+
+        [[ -z "$format" ]] && continue
+
+        output="${input%.*}.$format"
+
+        gum style --foreground 214 \
+          "🎬 Converting $input → $output"
+
+        ffmpeg -i "$input" "$output"
+
+        if [[ $? -eq 0 ]]; then
+          gum style --foreground 42 "✅ Conversion complete!"
+        else
+          gum style --foreground 196 "❌ Conversion failed."
+        fi
+
+        return 0
+        ;;
+
+
+      # ---------------------------------------------------------
+      # COMPRESS VIDEO
+      # ---------------------------------------------------------
+      "Compress Video")
+        echo ""
+        input=$(gum input --prompt "Input video: ")
+        [[ -z "$input" ]] && continue
+        _file_exists "$input" || continue
+
+        quality=$(printf "%s\n" \
+          "High Quality (CRF 20)" \
+          "Balanced (CRF 23)" \
+          "Smaller File (CRF 28)" \
+          "<- Go Back" | \
+          _pick --header "Choose compression level:" --show-help=false) || continue
+
+        [[ "$quality" == "<- Go Back" || -z "$quality" ]] && continue
+
+        case "$quality" in
+          "High Quality (CRF 20)")
+            quality=20
+            ;;
+          "Balanced (CRF 23)")
+            quality=23
+            ;;
+          "Smaller File (CRF 28)")
+            quality=28
+            ;;
+        esac
+
+        output="${input%.*}-compressed.mp4"
+
+        gum style --foreground 214 \
+          "📦 Compressing video..."
+
+        ffmpeg -i "$input" \
+          -c:v libx264 \
+          -crf "$quality" \
+          -preset medium \
+          -c:a aac \
+          -b:a 128k \
+          "$output"
+
+        if [[ $? -eq 0 ]]; then
+          gum style --foreground 42 "✅ Compressed video: $output"
+        else
+          gum style --foreground 196 "❌ Compression failed."
+        fi
+
+        return 0
+        ;;
+
+
+      # ---------------------------------------------------------
+      # TRIM VIDEO
+      # ---------------------------------------------------------
+      "Trim Video")
+        echo ""
+        input=$(gum input --prompt "Input video: ")
+        [[ -z "$input" ]] && continue
+        _file_exists "$input" || continue
+
+        start=$(gum input \
+          --prompt "Start time (HH:MM:SS): " \
+          --value "00:00:00")
+
+        duration=$(gum input \
+          --prompt "Duration (HH:MM:SS): " \
+          --value "00:00:10")
+
+        [[ -z "$start" || -z "$duration" ]] && continue
+
+        output="${input%.*}-trimmed.mp4"
+
+        gum style --foreground 214 "✂️ Cutting video..."
+
+        ffmpeg \
+          -ss "$start" \
+          -i "$input" \
+          -t "$duration" \
+          -c:v libx264 \
+          -c:a aac \
+          "$output"
+
+        if [[ $? -eq 0 ]]; then
+          gum style --foreground 42 "✅ Trimmed video: $output"
+        else
+          gum style --foreground 196 "❌ Trimming failed."
+        fi
+
+        return 0
+        ;;
+
+
+      # ---------------------------------------------------------
+      # RESIZE VIDEO
+      # ---------------------------------------------------------
+      "Resize Video")
+        echo ""
+        input=$(gum input --prompt "Input video: ")
+        [[ -z "$input" ]] && continue
+        _file_exists "$input" || continue
+
+        width=$(printf "%s\n" \
+          "3840 (4K)" \
+          "1920 (1080p)" \
+          "1280 (720p)" \
+          "854 (480p)" \
+          "<- Go Back" | \
+          _pick --header "Choose video width:" --show-help=false) || continue
+
+        [[ "$width" == "<- Go Back" || -z "$width" ]] && continue
+
+        width="${width%% *}"
+
+        output="${input%.*}-${width}p.mp4"
+
+        gum style --foreground 214 "📐 Resizing video..."
+
+        ffmpeg -i "$input" \
+          -vf "scale=${width}:-2" \
+          -c:v libx264 \
+          -crf 23 \
+          -c:a aac \
+          "$output"
+
+        if [[ $? -eq 0 ]]; then
+          gum style --foreground 42 "✅ Resized video: $output"
+        else
+          gum style --foreground 196 "❌ Resize failed."
+        fi
+
+        return 0
+        ;;
+
+
+      # ---------------------------------------------------------
+      # CONVERT AUDIO
+      # ---------------------------------------------------------
+      "Convert Audio")
+        echo ""
+        input=$(gum input --prompt "Input audio: ")
+        [[ -z "$input" ]] && continue
+        _file_exists "$input" || continue
+
+        format=$(printf "%s\n" "mp3" "wav" "flac" "m4a" | \
+          _pick --header "Choose output format:" --show-help=false) || continue
+
+        [[ -z "$format" ]] && continue
+
+        output="${input%.*}.$format"
+
+        gum style --foreground 214 \
+          "🎵 Converting $input → $output"
+
+        ffmpeg -i "$input" "$output"
+
+        if [[ $? -eq 0 ]]; then
+          gum style --foreground 42 "✅ Conversion complete!"
+        else
+          gum style --foreground 196 "❌ Conversion failed."
+        fi
+
+        return 0
+        ;;
+
+
+      # ---------------------------------------------------------
+      # EXTRACT AUDIO
+      # ---------------------------------------------------------
+      "Extract Audio")
+        echo ""
+        input=$(gum input --prompt "Input video: ")
+        [[ -z "$input" ]] && continue
+        _file_exists "$input" || continue
+
+        format=$(printf "%s\n" "mp3" "m4a" "wav" "flac" | \
+          _pick --header "Choose audio format:" --show-help=false) || continue
+
+        [[ -z "$format" ]] && continue
+
+        output="${input%.*}.$format"
+
+        gum style --foreground 214 "🎵 Extracting audio..."
+
+        case "$format" in
+          mp3)
+            ffmpeg -i "$input" -vn -c:a libmp3lame -q:a 2 "$output"
+            ;;
+          m4a)
+            ffmpeg -i "$input" -vn -c:a aac -b:a 192k "$output"
+            ;;
+          wav)
+            ffmpeg -i "$input" -vn "$output"
+            ;;
+          flac)
+            ffmpeg -i "$input" -vn -c:a flac "$output"
+            ;;
+        esac
+
+        if [[ $? -eq 0 ]]; then
+          gum style --foreground 42 "✅ Audio extracted: $output"
+        else
+          gum style --foreground 196 "❌ Audio extraction failed."
+        fi
+
+        return 0
+        ;;
+
+
+      # ---------------------------------------------------------
+      # REMOVE AUDIO
+      # ---------------------------------------------------------
+      "Remove Audio")
+        echo ""
+        input=$(gum input --prompt "Input video: ")
+        [[ -z "$input" ]] && continue
+        _file_exists "$input" || continue
+
+        output="${input%.*}-silent.mp4"
+
+        gum style --foreground 214 "🔇 Removing audio..."
+
+        ffmpeg -i "$input" -c:v copy -an "$output"
+
+        if [[ $? -eq 0 ]]; then
+          gum style --foreground 42 "✅ Silent video created: $output"
+        else
+          gum style --foreground 196 "❌ Operation failed."
+        fi
+
+        return 0
+        ;;
+
+
+      # ---------------------------------------------------------
+      # EXTRACT FRAMES
+      # ---------------------------------------------------------
+      "Extract Frames")
+        echo ""
+        input=$(gum input --prompt "Input video: ")
+        [[ -z "$input" ]] && continue
+        _file_exists "$input" || continue
+
+        choice=$(printf "%s\n" \
+          "1 frame per second" \
+          "1 frame every 5 seconds" \
+          "10 frames per second" \
+          "<- Go Back" | \
+          _pick --header "Frame extraction rate:" --show-help=false) || continue
+
+        [[ "$choice" == "<- Go Back" || -z "$choice" ]] && continue
+
+        case "$choice" in
+          "1 frame per second")
+            speed=1
+            ;;
+          "1 frame every 5 seconds")
+            speed="1/5"
+            ;;
+          "10 frames per second")
+            speed=10
+            ;;
+        esac
+
+        local frame_dir="${input%.*}-frames"
+        mkdir -p "$frame_dir"
+
+        gum style --foreground 214 "🖼️ Extracting frames..."
+
+        ffmpeg -i "$input" \
+          -vf "fps=$speed" \
+          "$frame_dir/frame-%04d.jpg"
+
+        if [[ $? -eq 0 ]]; then
+          gum style --foreground 42 \
+            "✅ Frames saved to: $frame_dir/"
+        else
+          gum style --foreground 196 "❌ Frame extraction failed."
+        fi
+
+        return 0
+        ;;
+
+
+      # ---------------------------------------------------------
+      # CREATE GIF
+      # ---------------------------------------------------------
+      "Create GIF")
+        echo ""
+        input=$(gum input --prompt "Input video: ")
+        [[ -z "$input" ]] && continue
+        _file_exists "$input" || continue
+
+        start=$(gum input \
+          --prompt "Start time (HH:MM:SS): " \
+          --value "00:00:00")
+
+        duration=$(gum input \
+          --prompt "Duration: " \
+          --value "00:00:05")
+
+        [[ -z "$start" || -z "$duration" ]] && continue
+
+        output="${input%.*}.gif"
+
+        gum style --foreground 214 "🎞️ Creating GIF..."
+
+        ffmpeg \
+          -ss "$start" \
+          -t "$duration" \
+          -i "$input" \
+          -vf "fps=10,scale=720:-1:flags=lanczos" \
+          "$output"
+
+        if [[ $? -eq 0 ]]; then
+          gum style --foreground 42 "✅ GIF created: $output"
+        else
+          gum style --foreground 196 "❌ GIF creation failed."
+        fi
+
+        return 0
+        ;;
+
+
+      # ---------------------------------------------------------
+      # MERGE AUDIO + VIDEO
+      # ---------------------------------------------------------
+      "Merge Audio + Video")
+        echo ""
+        input=$(gum input --prompt "Video file: ")
+        [[ -z "$input" ]] && continue
+        _file_exists "$input" || continue
+
+        audio=$(gum input --prompt "Audio file: ")
+        [[ -z "$audio" ]] && continue
+        _file_exists "$audio" || continue
+
+        output="${input%.*}-merged.mp4"
+
+        gum style --foreground 214 \
+          "🔀 Combining video + audio..."
+
+        ffmpeg \
+          -i "$input" \
+          -i "$audio" \
+          -map 0:v:0 \
+          -map 1:a:0 \
+          -c:v copy \
+          -c:a aac \
+          -shortest \
+          "$output"
+
+        if [[ $? -eq 0 ]]; then
+          gum style --foreground 42 "✅ Merged file: $output"
+        else
+          gum style --foreground 196 "❌ Merge failed."
+        fi
+
+        return 0
+        ;;
+
+
+      # ---------------------------------------------------------
+      # INSPECT MEDIA
+      # ---------------------------------------------------------
+      "Inspect Media")
+        echo ""
+        input=$(gum input --prompt "Media file: ")
+        [[ -z "$input" ]] && continue
+        _file_exists "$input" || continue
+
+        echo ""
+        gum style --foreground 214 "🔍 Media information:"
+        echo ""
+
+        ffprobe \
+          -hide_banner \
+          -v error \
+          -show_entries \
+          format=filename,duration,size,format_name:stream=index,codec_name,codec_type,width,height,r_frame_rate \
+          -of default=noprint_wrappers=1 \
+          "$input"
+
+        echo ""
+        gum style --foreground 42 "✅ Inspection complete."
+
+        return 0
+        ;;
+
+    esac
+  done
+}
+
