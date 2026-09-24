@@ -394,72 +394,212 @@ spice() {
   unsetopt xtrace
   set +x
 
-    local theme_name="$1"
-    local color_scheme="$2"
+  local theme_name="$1"
+  local color_scheme="$2"
 
-    if [ -z "$theme_name" ]; then
-        printf '\n'
-        while true; do
-        case "$(printf "%s\n" "Choose Theme" "Update Spicetify" "Backup Apply" | gum choose --show-help=false --padding "1 1" --header "Choose action (Esc to quit)")" in
-                "Choose Theme")
-          # Esc in this chooser returns to the previous menu.
-            theme_name=$(ls "$HOME/.config/spicetify/Themes" | gum choose --show-help=false --padding "1 1" --header "Choose theme (Esc to go back)") || {
-              printf '\033[1A\033[2K\r'
-              continue
-            }
-                    break
-                    ;;
-                "Update Spicetify")
-                    theme_name="update"
-                    break
-                    ;;
-                "Backup Apply")
-                    theme_name="backup-apply"
-                    break
-                    ;;
-          "")
+  # Get Spicetify's actual config directory
+  local config_dir
+  config_dir="$(spicetify config config_dir 2>/dev/null)"
+
+  if [[ -z "$config_dir" || ! -d "$config_dir" ]]; then
+    config_dir="$HOME/.config/spicetify"
+  fi
+
+  local themes_dir="$config_dir/Themes"
+
+  # ─────────────────────────────────────────────
+  # Interactive menu
+  # ─────────────────────────────────────────────
+
+  if [[ -z "$theme_name" ]]; then
+    printf '\n'
+
+    while true; do
+      case "$(printf "%s\n" \
+        "Choose Theme" \
+        "Update Spicetify" \
+        "Backup Apply" |
+        gum choose \
+          --show-help=false \
+          --padding "1 1" \
+          --header "Choose action (Esc to quit)")" in
+
+        "Choose Theme")
+          if [[ ! -d "$themes_dir" ]]; then
+            gum style \
+              --foreground 196 \
+              "Themes directory not found: $themes_dir"
+            return 1
+          fi
+
+          theme_name=$(
+            ls -1 "$themes_dir" |
+              gum choose \
+                --show-help=false \
+                --padding "1 1" \
+                --header "Choose theme (Esc to go back)"
+          ) || {
             printf '\033[1A\033[2K\r'
-            return
-            ;;
-            esac
-        done
-    fi
+            continue
+          }
+
+          break
+          ;;
+
+        "Update Spicetify")
+          theme_name="update"
+          break
+          ;;
+
+        "Backup Apply")
+          theme_name="backup-apply"
+          break
+          ;;
+
+        "")
+          printf '\033[1A\033[2K\r'
+          return
+          ;;
+      esac
+    done
+  fi
+
+  # ─────────────────────────────────────────────
+  # Update Spicetify
+  # ─────────────────────────────────────────────
 
   case "$theme_name" in
     update)
       gum confirm "Run 'spicetify update'?" || return
-      gum spin --title "Updating Spicetify..." -- spicetify update >/dev/null 2>&1
-      gum style --foreground 42 "🎵 Spicetify updated."
+
+      if gum spin \
+        --title "Updating Spicetify..." \
+        -- spicetify update; then
+
+        gum style \
+          --foreground 42 \
+          "🎵 Spicetify updated."
+      else
+        gum style \
+          --foreground 196 \
+          "❌ Spicetify update failed."
+        return 1
+      fi
+
       return
       ;;
+
+    # ─────────────────────────────────────────
+    # Backup Apply
+    # ─────────────────────────────────────────
+
     backup-apply|backup_apply|backupapply)
       gum confirm "Run 'spicetify backup apply'?" || return
-      gum spin --title "Running backup apply..." -- spicetify backup apply >/dev/null 2>&1
-      gum style --foreground 42 "🎵 Spicetify backup apply completed."
+
+      if gum spin \
+        --title "Running backup apply..." \
+        -- spicetify backup apply; then
+
+        gum style \
+          --foreground 42 \
+          "🎵 Spicetify backup apply completed."
+      else
+        gum style \
+          --foreground 196 \
+          "❌ Spicetify backup apply failed."
+        return 1
+      fi
+
       return
       ;;
   esac
 
-    local theme_dir="$HOME/.config/spicetify/Themes/$theme_name"
+  # ─────────────────────────────────────────────
+  # Theme validation
+  # ─────────────────────────────────────────────
 
-    if [ ! -d "$theme_dir" ]; then
-        gum style --foreground 196 "Theme '$theme_name' not found."
-        return 1
+  local theme_dir="$themes_dir/$theme_name"
+
+  if [[ ! -d "$theme_dir" ]]; then
+    gum style \
+      --foreground 196 \
+      "❌ Theme '$theme_name' not found."
+
+    printf '\nThemes directory:\n%s\n' "$themes_dir"
+    return 1
+  fi
+
+  # ─────────────────────────────────────────────
+  # Color scheme validation
+  # ─────────────────────────────────────────────
+
+  if [[ -n "$color_scheme" ]]; then
+    local color_file="$theme_dir/color.ini"
+
+    if [[ ! -f "$color_file" ]]; then
+      gum style \
+        --foreground 196 \
+        "❌ Theme '$theme_name' has no color.ini."
+      return 1
     fi
 
-    spicetify config current_theme "$theme_name"
+    if ! grep -q "^\[$color_scheme\]" "$color_file"; then
+      gum style \
+        --foreground 196 \
+        "❌ Invalid color scheme '$color_scheme'."
 
-    if [ -n "$color_scheme" ]; then
-        if ! grep -q "\[$color_scheme\]" "$theme_dir/color.ini"; then
-            gum style --foreground 196 "Invalid color scheme."
-            return 1
-        fi
-        spicetify config color_scheme "$color_scheme"
+      printf '\nAvailable color schemes:\n'
+      grep '^\[' "$color_file" | sed 's/^\[\(.*\)\]$/  \1/'
+
+      return 1
     fi
+  fi
 
-    gum spin --title "Applying theme..." -- spicetify apply >/dev/null 2>&1
+  # ─────────────────────────────────────────────
+  # Set theme
+  # ─────────────────────────────────────────────
 
-    gum style --foreground 42 "🎵 Theme '$theme_name' applied."
+  if ! spicetify config current_theme "$theme_name"; then
+    gum style \
+      --foreground 196 \
+      "❌ Failed to set theme."
+    return 1
+  fi
+
+  # ─────────────────────────────────────────────
+  # Set color scheme
+  # ─────────────────────────────────────────────
+
+  if [[ -n "$color_scheme" ]]; then
+    if ! spicetify config color_scheme "$color_scheme"; then
+      gum style \
+        --foreground 196 \
+        "❌ Failed to set color scheme."
+      return 1
+    fi
+  fi
+
+  # ─────────────────────────────────────────────
+  # Apply
+  # ─────────────────────────────────────────────
+
+  if gum spin \
+    --title "Applying '$theme_name'..." \
+    -- spicetify apply; then
+
+    gum style \
+      --foreground 42 \
+      "🎵 Theme '$theme_name' applied."
+  else
+    gum style \
+      --foreground 196 \
+      "❌ Failed to apply theme '$theme_name'."
+
+    printf '\nRun this manually to see the full error:\n'
+    printf '  spicetify apply\n'
+
+    return 1
+  fi
 }
 
 ############################### Tig Menu ######################################################
