@@ -1147,3 +1147,222 @@ mac() {
     esac
   done
 }
+
+########################### MAC STORAGE CLEANUP ################################
+
+diskclean() {
+  emulate -L zsh
+  setopt localoptions no_aliases
+
+  if ! command -v gum >/dev/null 2>&1; then
+    echo "gum is required for this interactive menu."
+    return 127
+  fi
+
+  # label -> shell command (as a string, run via eval)
+  local -A targets
+  targets=(
+    "npm cache (safe, re-downloads on next install)"            "npm cache clean --force"
+    "pip cache (safe, re-downloads on next install)"            "pip cache purge"
+    "Homebrew old versions + cache (brew cleanup -s)"           "brew cleanup -s"
+    "Docker prune - images + build cache (keeps volumes/data)"  "docker system prune -a -f"
+    "Claude Desktop VM bundles (re-downloads if needed)"        "rm -rf \"\$HOME/Library/Application Support/Claude/vm_bundles\""
+    "Claude Desktop app cache"                                  "rm -rf \"\$HOME/Library/Application Support/Claude/Cache\" \"\$HOME/Library/Application Support/Claude/Code Cache\""
+    "Brave browser cache (quit Brave first)"                    "rm -rf \"\$HOME/Library/Caches/BraveSoftware\""
+    "Zen browser cache (quit Zen first)"                        "rm -rf \"\$HOME/Library/Caches/zen\""
+    "Spotify cache"                                             "rm -rf \"\$HOME/Library/Caches/com.spotify.client\""
+    "Playwright browser binaries cache (re-downloads on use)"   "rm -rf \"\$HOME/Library/Caches/ms-playwright\" \"\$HOME/Library/Caches/ms-playwright-go\""
+    "Xcode DerivedData"                                         "rm -rf \"\$HOME/Library/Developer/Xcode/DerivedData\""
+    "Xcode unavailable simulators"                              "xcrun simctl delete unavailable"
+    "Old logs (>30 days, ~/Library/Logs)"                       "find \"\$HOME/Library/Logs\" -type f -mtime +30 -delete"
+    "Empty Trash"                                                "rm -rf \"\$HOME/.Trash\"/* \"\$HOME/.Trash\"/.*  2>/dev/null"
+    "Time Machine local snapshots (frees space immediately)"    "sudo tmutil thinlocalsnapshots / 999999999999 4"
+  )
+
+  # stable order for display
+  local -a labels
+  labels=(
+    "npm cache (safe, re-downloads on next install)"
+    "pip cache (safe, re-downloads on next install)"
+    "Homebrew old versions + cache (brew cleanup -s)"
+    "Docker prune - images + build cache (keeps volumes/data)"
+    "Claude Desktop VM bundles (re-downloads if needed)"
+    "Claude Desktop app cache"
+    "Brave browser cache (quit Brave first)"
+    "Zen browser cache (quit Zen first)"
+    "Spotify cache"
+    "Playwright browser binaries cache (re-downloads on use)"
+    "Xcode DerivedData"
+    "Xcode unavailable simulators"
+    "Old logs (>30 days, ~/Library/Logs)"
+    "Empty Trash"
+    "Time Machine local snapshots (frees space immediately)"
+  )
+
+  gum style --foreground 212 --bold "🧹 Mac Storage Cleanup"
+  echo ""
+
+  local -a chosen
+  chosen=("${(@f)$(print -l "${labels[@]}" | gum choose --no-limit \
+    --header $'Select what to clean (space to toggle, enter to confirm):\n' \
+    --height 20 --show-help=false --padding "1 1")}")
+
+  if (( ${#chosen} == 0 )); then
+    gum style --foreground 214 "Nothing selected. Exiting."
+    return 0
+  fi
+
+  echo ""
+  gum style --foreground 250 "Selected ${#chosen} item(s):"
+  local item
+  for item in "${chosen[@]}"; do
+    gum style --foreground 250 "  • $item"
+  done
+  echo ""
+
+  gum confirm "Proceed with cleanup?" --show-help=false || { gum style --foreground 214 "Cancelled."; return 0; }
+
+  local before after freed
+  before=$(df -k /System/Volumes/Data | awk 'NR==2{print $3}')
+
+  echo ""
+  for item in "${chosen[@]}"; do
+    local cmd="${targets[$item]}"
+    [[ -z "$cmd" ]] && continue
+
+    gum spin --spinner dot --title "Cleaning: $item" -- zsh -c "$cmd" 2>/dev/null
+    gum style --foreground 42 "✓ $item"
+  done
+
+  after=$(df -k /System/Volumes/Data | awk 'NR==2{print $3}')
+  freed=$(( (before - after) / 1024 ))
+
+  echo ""
+  if (( freed > 0 )); then
+    gum style --border rounded --padding "1 2" --border-foreground 42 \
+      "✅ Cleanup complete. Freed approximately ${freed} MB."
+  else
+    gum style --border rounded --padding "1 2" --border-foreground 214 \
+      "Cleanup ran. Disk usage may take a moment (or a reboot) to reflect fully."
+  fi
+
+  gum style --foreground 245 "Tip: run 'diskwhat' anytime to see what's actually using space."
+}
+
+########################### MAC STORAGE INSPECTOR ################################
+
+diskwhat() {
+  emulate -L zsh
+  setopt localoptions no_aliases
+
+  if ! command -v gum >/dev/null 2>&1; then
+    echo "gum is required for this interactive menu."
+    return 127
+  fi
+
+  local -a menu
+  menu=(
+    "Real total disk usage (the number that actually matters)"
+    "~/Library breakdown (top-level)"
+    "~/Library/Application Support breakdown"
+    "~/Library/Caches breakdown"
+    "~/Library/Containers breakdown"
+    "~/Library/Group Containers breakdown"
+    "Home folder top-level (~)"
+    "Downloads folder"
+    "Documents folder"
+    "Docker disk usage"
+    "Time Machine local snapshots"
+    "Biggest files in home folder (>500MB)"
+    "Exit"
+  )
+
+  while true; do
+    echo ""
+    local choice
+    choice=$(print -l "${menu[@]}" | gum choose \
+      --header $'What do you want to check?\n' \
+      --height 15 --show-help=false --padding "1 1") || return 0
+
+    [[ "$choice" == "Exit" || -z "$choice" ]] && return 0
+
+    echo ""
+    case "$choice" in
+      "Real total disk usage (the number that actually matters)")
+        gum style --foreground 212 --bold "Real disk usage (ignore the Storage panel's 'System Data' number):"
+        df -h /System/Volumes/Data
+        ;;
+
+      "~/Library breakdown (top-level)")
+        gum spin --spinner dot --title "Scanning ~/Library..." -- sleep 0.3
+        du -sh "$HOME"/Library/*/ 2>/dev/null | sort -rh | head -20
+        ;;
+
+      "~/Library/Application Support breakdown")
+        gum spin --spinner dot --title "Scanning Application Support..." -- sleep 0.3
+        du -sh "$HOME/Library/Application Support"/*/ 2>/dev/null | sort -rh | head -20
+        ;;
+
+      "~/Library/Caches breakdown")
+        gum spin --spinner dot --title "Scanning Caches..." -- sleep 0.3
+        du -sh "$HOME/Library/Caches"/*/ 2>/dev/null | sort -rh | head -20
+        ;;
+
+      "~/Library/Containers breakdown")
+        gum spin --spinner dot --title "Scanning Containers..." -- sleep 0.3
+        du -sh "$HOME/Library/Containers"/*/ 2>/dev/null | sort -rh | head -20
+        ;;
+
+      "~/Library/Group Containers breakdown")
+        gum spin --spinner dot --title "Scanning Group Containers..." -- sleep 0.3
+        du -sh "$HOME/Library/Group Containers"/*/ 2>/dev/null | sort -rh | head -20
+        ;;
+
+      "Home folder top-level (~)")
+        gum spin --spinner dot --title "Scanning home folder..." -- sleep 0.3
+        du -sh "$HOME"/*/ 2>/dev/null | sort -rh | head -20
+        ;;
+
+      "Downloads folder")
+        gum spin --spinner dot --title "Scanning Downloads..." -- sleep 0.3
+        du -sh "$HOME/Downloads"/*/ 2>/dev/null | sort -rh | head -20
+        du -sh "$HOME/Downloads"/* 2>/dev/null | sort -rh | head -20
+        ;;
+
+      "Documents folder")
+        gum spin --spinner dot --title "Scanning Documents..." -- sleep 0.3
+        du -sh "$HOME/Documents"/*/ 2>/dev/null | sort -rh | head -20
+        ;;
+
+      "Docker disk usage")
+        if command -v docker >/dev/null 2>&1; then
+          docker system df
+        else
+          gum style --foreground 196 "Docker not found."
+        fi
+        ;;
+
+      "Time Machine local snapshots")
+        tmutil listlocalsnapshots / 2>/dev/null
+        ;;
+
+      "Biggest files in home folder (>500MB)")
+        gum style --foreground 214 "This can take a minute..."
+        gum spin --spinner dot --title "Searching for large files..." -- \
+          find "$HOME" -type f -size +500M 2>/dev/null > /tmp/diskwhat_bigfiles.txt
+        if [[ -s /tmp/diskwhat_bigfiles.txt ]]; then
+          while IFS= read -r f; do
+            du -h "$f" 2>/dev/null
+          done < /tmp/diskwhat_bigfiles.txt | sort -rh
+        else
+          gum style --foreground 42 "No files over 500MB found."
+        fi
+        rm -f /tmp/diskwhat_bigfiles.txt
+        ;;
+    esac
+
+    echo ""
+    gum confirm "Check something else?" --show-help=false || return 0
+  done
+}
+

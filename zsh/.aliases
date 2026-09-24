@@ -13,7 +13,7 @@ alias ta='eza --tree --all --level=100'   # Level=0 unlimited depth
 alias aliases='alias | awk -F"=" "{print \$1}"'
 
 # Show all functions
-alias functions='functions | grep "^my" | awk "{print \$1}"'
+alias functions='grep -hE "^[a-zA-Z_][a-zA-Z0-9_-]*\(\)" "$ZDOTDIR/.functions" | sed -E "s/\(\).*//" | sort'
 
 # Symlink
 alias lf='ln -sf'
