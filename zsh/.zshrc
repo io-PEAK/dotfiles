@@ -126,3 +126,5 @@ if [[ "'${zsh_eval_context[-1]}" == "loadautofunc" ]]; then
 else
   compdef _opencode_yargs_completions opencode
 fi
+
+export PATH=$PATH:/Users/peakmac/.spicetify
