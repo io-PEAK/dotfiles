@@ -30,4 +30,5 @@ release-notes.json
 .plugins.lock
 plugins/
 sessions/
-*.sock
+*.sock__pycache__/
+*.pyc

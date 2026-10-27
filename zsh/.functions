@@ -936,6 +936,177 @@ yt-dlp() {
 
 ########################### MAC SYSTEM CONFIGURE ################################
 
+mac_network() {
+  emulate -L zsh
+  setopt localoptions no_aliases
+
+  if ! command -v gum >/dev/null 2>&1; then
+    echo "gum is required for this menu."
+    return 127
+  fi
+
+  local choice ip mask subnet
+
+  while true; do
+    choice=$(gum choose \
+      --header "Network Diagnostics:" \
+      --show-help=false \
+      "Network Overview" \
+      "Wi-Fi Details" \
+      "Gateway & Routing" \
+      "DNS Configuration" \
+      "ARP / Neighbor Cache" \
+      "Discover LAN Devices" \
+      "Network Services & VPNs" \
+      "Proxy & Network Extensions" \
+      "Back") || return 0
+
+    [[ "$choice" == "Back" ]] && return 0
+
+    echo ""
+
+    case "$choice" in
+      "Network Overview")
+        echo "=== HOST ==="
+        hostname
+        scutil --get ComputerName 2>/dev/null
+
+        echo "\n=== INTERFACES ==="
+        ifconfig | grep -E '^[a-zA-Z0-9]+:|inet |inet6 |status:'
+
+        echo "\n=== WI-FI IP ==="
+        ipconfig getifaddr en0
+
+        echo "\n=== NETWORK SERVICES ==="
+        networksetup -listnetworkserviceorder
+        ;;
+
+      "Wi-Fi Details")
+        echo "=== CONNECTED NETWORK ==="
+        networksetup -getairportnetwork en0
+
+        echo "\n=== WI-FI CONFIGURATION ==="
+        networksetup -getinfo Wi-Fi
+
+        echo "\n=== WI-FI HARDWARE ==="
+        networksetup -listallhardwareports
+
+        echo "\n=== WI-FI POWER ==="
+        networksetup -getairportpower en0
+        ;;
+
+      "Gateway & Routing")
+        echo "=== DEFAULT ROUTE ==="
+        route -n get default
+
+        echo "\n=== ROUTE TABLE (IPv4) ==="
+        netstat -rn -f inet
+
+        echo "\n=== GATEWAY REACHABILITY ==="
+        ip=$(ipconfig getoption en0 router 2>/dev/null)
+        if [[ -n "$ip" ]]; then
+          echo "Gateway: $ip"
+          ping -c 2 -W 1000 "$ip"
+        else
+          echo "Could not determine gateway via DHCP."
+        fi
+        ;;
+
+      "DNS Configuration")
+        echo "=== DNS SERVERS ==="
+        networksetup -getdnsservers Wi-Fi
+
+        echo "\n=== SEARCH DOMAINS ==="
+        networksetup -getsearchdomains Wi-Fi
+
+        echo "\n=== RESOLVER DETAILS ==="
+        scutil --dns | grep -E 'resolver #|nameserver\[|search domain\[|if_index|flags'
+        ;;
+
+      "ARP / Neighbor Cache")
+        echo "=== ARP CACHE ==="
+        arp -an
+
+        echo "\n=== NEIGHBOR / ROUTE ENTRIES ==="
+        netstat -rn -f inet | grep -E 'link#|llinfo|192\.168\.|10\.|172\.'
+        ;;
+
+      "Discover LAN Devices")
+        if ! command -v nmap >/dev/null 2>&1; then
+          echo "nmap is not installed."
+          echo "Install it with: brew install nmap"
+          echo ""
+          echo "Currently cached neighbors:"
+          arp -an
+          echo ""
+          echo "ARP cache alone does not list every connected device."
+        else
+          ip=$(ipconfig getifaddr en0)
+          mask=$(ifconfig en0 | awk '
+            /inet / {
+              for (i=1; i<=NF; i++)
+                if ($i=="netmask") { print $(i+1); exit }
+            }')
+
+          if [[ -z "$ip" || -z "$mask" ]]; then
+            echo "Could not determine the Wi-Fi IP/subnet."
+          elif ! command -v python3 >/dev/null 2>&1; then
+            echo "python3 is required to calculate the subnet."
+          else
+            subnet=$(python3 -c '
+import ipaddress, sys
+ip, mask = sys.argv[1], sys.argv[2]
+mask = ".".join(str(int(mask[2+i:4+i], 16)) for i in (0,2,4,6))
+print(ipaddress.ip_network(f"{ip}/{mask}", strict=False))
+' "$ip" "$mask")
+
+            if [[ -n "$subnet" ]]; then
+              echo "Your Mac: $ip"
+              echo "Scanning subnet: $subnet"
+              echo "This may take a little while..."
+              nmap -sn "$subnet"
+            else
+              echo "Could not calculate your subnet."
+            fi
+          fi
+        fi
+        ;;
+
+      "Network Services & VPNs")
+        echo "=== NETWORK SERVICES ==="
+        networksetup -listallnetworkservices
+
+        echo "\n=== SERVICE ORDER ==="
+        networksetup -listnetworkserviceorder
+
+        echo "\n=== VPN CONNECTIONS ==="
+        scutil --nc list
+
+        echo "\n=== SYSTEM EXTENSIONS ==="
+        systemextensionsctl list
+        ;;
+
+      "Proxy & Network Extensions")
+        echo "=== SYSTEM PROXY SETTINGS ==="
+        scutil --proxy
+
+        echo "\n=== macOS APPLICATION FIREWALL ==="
+        /usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate
+
+        echo "\n=== PACKET FILTER STATUS ==="
+        sudo pfctl -s info 2>&1 | head -n 12
+
+        echo "\n=== NETWORK EXTENSIONS ==="
+        systemextensionsctl list
+        ;;
+    esac
+
+    echo ""
+    gum confirm "Return to Network Diagnostics menu?" \
+      --show-help=false || return 0
+  done
+}
+
 mac() {
   emulate -L zsh
   setopt localoptions no_aliases
@@ -964,6 +1135,7 @@ mac() {
     "Desktop & Finder Visuals"
     "Screenshot Controls"
     "Dock & Window Tweaks"
+    "Network Diagnostics"
     "Network Quick Fix"
     "Clear System Cache"
     "Exit"
@@ -1127,6 +1299,10 @@ mac() {
             ;;
         esac
         return 0
+        ;;
+
+      "Network Diagnostics")
+        mac_network
         ;;
 
       "Network Quick Fix")
@@ -1856,4 +2032,3 @@ ffmpeg() {
     esac
   done
 }
-
